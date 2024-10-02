@@ -1,0 +1,25 @@
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  workflow_call:
+
+name: phs_package_checks.yaml
+
+permissions: read-all
+
+jobs:
+   Style:
+    uses: ./style.yaml
+    permissions: read-all
+    secrets: inherit
+
+   Document:
+    uses: ./document.yaml
+    permissions: read-all
+    secrets: inherit
+   
+   R-CMD-check:
+    needs: [Style, Document]
+    uses: ./phs_R-CMD-check.yaml
+    permissions: read-all
+    secrets: inherit
