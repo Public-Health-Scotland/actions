@@ -9,17 +9,17 @@ permissions: read-all
 
 jobs:
    Style:
-    uses: ./phs_style.yaml
+    uses: ./.github/workflows/phs_style.yaml
     permissions: read-all
     secrets: inherit
 
    Document:
-    uses: ./phs_document.yaml
+    uses: ./.github/workflows/phs_document.yaml
     permissions: read-all
     secrets: inherit
    
    R-CMD-check:
     needs: [Style, Document]
-    uses: ./phs_R-CMD-check.yaml
+    uses: ./.github/workflows/phs_R-CMD-check.yaml
     permissions: read-all
     secrets: inherit
