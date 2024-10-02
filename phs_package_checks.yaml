@@ -9,12 +9,12 @@ permissions: read-all
 
 jobs:
    Style:
-    uses: ./style.yaml
+    uses: ./phs_style.yaml
     permissions: read-all
     secrets: inherit
 
    Document:
-    uses: ./document.yaml
+    uses: ./phs_document.yaml
     permissions: read-all
     secrets: inherit
    
