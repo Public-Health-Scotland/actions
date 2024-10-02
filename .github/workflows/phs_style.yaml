@@ -65,7 +65,7 @@ jobs:
         id: changes
         run: |
           FILES_TO_COMMIT=$(git diff-index --name-only ${{ github.sha }} | egrep --ignore-case '\.(R|[qR]md|Rmarkdown|Rnw|Rprofile)$')
-          echo "::set-output name=files_to_commit::$FILES_TO_COMMIT"
+          echo "{files_to_commit}={$FILES_TO_COMMIT}" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
         if: steps.changes.outputs.files_to_commit
@@ -79,7 +79,7 @@ jobs:
 
       - name: Create Pull Request
         if: failure()
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           commit-message: "Style code (GHA)"
           branch: auto-style-code
