@@ -32,7 +32,7 @@ jobs:
           - {os: windows-latest, r: '3.6.1'}
           - {os: windows-latest, r: '4.0.1'}
 
-          # An approximation of the PHS RStudio setup on Posit Workbench
+          # An approximation of the PHS RStudio setup on the Posit Workbench
           - {os: ubuntu-latest, r: '3.6.1'}
           - {os: ubuntu-latest, r: '4.0.2'}
           - {os: ubuntu-latest, r: '4.1.2'}
