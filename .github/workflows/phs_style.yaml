@@ -68,7 +68,7 @@ jobs:
           echo "{files_to_commit}={$FILES_TO_COMMIT}" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
-        if: steps.changes.outputs.files_to_commit
+        if: steps.changes.outputs.files_to_commit != ''
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
