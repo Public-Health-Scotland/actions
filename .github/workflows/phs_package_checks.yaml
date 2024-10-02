@@ -12,6 +12,7 @@ jobs:
     secrets: inherit
 
    Document:
+    needs: [Style]
     uses: ./.github/workflows/phs_document.yaml
     permissions: write-all
     secrets: inherit
