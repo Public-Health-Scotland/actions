@@ -61,34 +61,19 @@ jobs:
         run: styler::style_pkg()
         shell: Rscript {0}
 
-      - name: Check for changes
-        id: changes
-        run: |
-          echo "Checking for changes..."
-          git diff-index --name-only ${{ github.sha }}
-          if [ $? -ne 0 ]; then
-            echo "git diff-index command failed"
-            exit 1
-          fi
-      
-          FILES_TO_COMMIT=$(git diff-index --name-only ${{ github.sha }} | grep -E --ignore-case '\.(R|[qR]md|Rmarkdown|Rnw|Rprofile)$')
-          if [ $? -ne 0 ]; then
-            echo "grep command failed"
-            exit 1
-          fi
-      
-          echo "Files to commit- $FILES_TO_COMMIT"
-          echo "files_to_commit=$FILES_TO_COMMIT" >> $GITHUB_OUTPUT
-
       - name: Commit and push changes
-        if: steps.changes.outputs.files_to_commit != ''
         run: |
+          if FILES_TO_COMMIT=($(git diff-index --name-only ${{ github.sha }} \
+            | grep -E --ignore-case '\.(R|[qR]md|Rmarkdown|Rnw|Rprofile)$'))
+          then
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git add ${{ steps.changes.outputs.files_to_commit }}
-          git commit -m "Style code (GHA)"
+          git commit ${FILES_TO_COMMIT[*]} -m "Style code (GHA)"
           git pull --ff-only || true
           git push origin || echo "Push failed, creating a pull request"
+          else
+            echo "No changes to commit."
+          fi
 
       - name: Create Pull Request
         if: failure()
