@@ -63,6 +63,7 @@ jobs:
         shell: Rscript {0}
 
       - name: Commit and push changes
+        id: commit_step
         run: |
           if FILES_TO_COMMIT=($(git diff-index --name-only ${{ github.sha }} \
             | grep -E --ignore-case '\.(R|[qR]md|Rmarkdown|Rnw|Rprofile)$'))
@@ -71,13 +72,13 @@ jobs:
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git commit ${FILES_TO_COMMIT[*]} -m "Style code (GHA)"
           git pull --ff-only || true
-          git push origin || echo "Push failed, creating a pull request"
+          git push origin || { echo "Push failed, creating a pull request"; exit 1; }
           else
             echo "No changes to commit."
           fi
 
       - name: Create Pull Request
-        if: failure()
+        if: steps.commit_step.outcome == 'failure'
         uses: peter-evans/create-pull-request@v7
         with:
           commit-message: "Style code (GHA)"
