@@ -64,21 +64,14 @@ jobs:
 
       - name: Commit and push changes
         id: commit_step
-        run: |
-          if FILES_TO_COMMIT=($(git diff-index --name-only HEAD ${{ github.event.pull_request.base.ref }} \
-            | grep -E --ignore-case '\.(R|[qR]md|Rmarkdown|Rnw|Rprofile)$'))
-          then
-          git config --local user.name "$GITHUB_ACTOR"
-          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git commit ${FILES_TO_COMMIT[*]} -m "Style code (GHA)"
-          git pull --ff-only || true
-          git push origin || { echo "Push failed, creating a pull request"; exit 1; }
-          else
-            echo "No changes to commit."
-          fi
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Style code (GHA)"
+          skip_checkout: true
 
       - name: Create Pull Request
-        if: steps.commit_step.outcome == 'failure'
+        if: steps.commit_step.outputs.changes_detected == 'true' \
+          & steps.commit_step.outcome == 'failure'
         uses: peter-evans/create-pull-request@v7
         with:
           commit-message: "Style code (GHA)"
