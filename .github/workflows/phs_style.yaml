@@ -64,7 +64,20 @@ jobs:
       - name: Check for changes
         id: changes
         run: |
+          echo "Checking for changes..."
+          git diff-index --name-only ${{ github.sha }}
+          if [ $? -ne 0 ]; then
+            echo "git diff-index command failed"
+            exit 1
+          fi
+      
           FILES_TO_COMMIT=$(git diff-index --name-only ${{ github.sha }} | grep -E --ignore-case '\.(R|[qR]md|Rmarkdown|Rnw|Rprofile)$')
+          if [ $? -ne 0 ]; then
+            echo "grep command failed"
+            exit 1
+          fi
+      
+          echo "Files to commit- $FILES_TO_COMMIT"
           echo "files_to_commit=$FILES_TO_COMMIT" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
