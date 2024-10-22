@@ -64,8 +64,8 @@ jobs:
       - name: Check for changes
         id: changes
         run: |
-          FILES_TO_COMMIT=$(git diff-index --name-only ${{ github.sha }} | egrep --ignore-case '\.(R|[qR]md|Rmarkdown|Rnw|Rprofile)$')
-          echo "{files_to_commit}={$FILES_TO_COMMIT}" >> $GITHUB_OUTPUT
+          FILES_TO_COMMIT=$(git diff-index --name-only ${{ github.sha }} | grep -E --ignore-case '\.(R|[qR]md|Rmarkdown|Rnw|Rprofile)$')
+          echo "files_to_commit=$FILES_TO_COMMIT" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
         if: steps.changes.outputs.files_to_commit != ''
