@@ -67,7 +67,6 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Style code (GHA)"
-          skip_checkout: true
 
       - name: Create Pull Request
         if: steps.commit_step.outputs.changes_detected == 'true' && steps.commit_step.outcome == 'failure'
