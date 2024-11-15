@@ -22,3 +22,9 @@ jobs:
     uses: ./.github/workflows/phs_R-CMD-check.yaml
     permissions: read-all
     secrets: inherit
+
+   test-coverage:
+    needs: [R-CMD-check]
+    uses ./.GitHub/workflows/phs_test_coverage.yaml
+    permissions: read-all
+    secrets: inherit
