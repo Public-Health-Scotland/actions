@@ -3,7 +3,7 @@
 on:
   workflow_call:
 
-name: test-coverage.yaml
+name: phs_test_coverage.yaml
 
 permissions: read-all
 
