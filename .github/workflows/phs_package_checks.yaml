@@ -5,16 +5,20 @@ on:
 
 name: phs_package_checks.yaml
 
+permissions: read-all
+
 jobs:
    Style:
     uses: ./.github/workflows/phs_style.yaml
-    permissions: write-all
+    permissions:
+      contents: write
     secrets: inherit
 
    Document:
     needs: [Style]
     uses: ./.github/workflows/phs_document.yaml
-    permissions: write-all
+    permissions:
+      contents: write
     secrets: inherit
    
    R-CMD-check:
