@@ -5,7 +5,9 @@ on:
 
 name: phs_package_checks.yaml
 
-permissions: read-all
+permissions: 
+  contents: read
+  pull-requests: read
 
 jobs:
    Style:
@@ -24,11 +26,13 @@ jobs:
    R-CMD-check:
     needs: [Style, Document]
     uses: ./.github/workflows/phs_R-CMD-check.yaml
-    permissions: read-all
+    permissions: 
+     contents: read
     secrets: inherit
 
    test-coverage:
     needs: [R-CMD-check]
     uses: ./.github/workflows/phs_test_coverage.yaml
-    permissions: read-all
+    permissions: 
+      contents: read
     secrets: inherit
