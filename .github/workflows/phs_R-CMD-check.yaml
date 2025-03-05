@@ -5,7 +5,8 @@ on:
 
 name: R-CMD-check.yaml
 
-permissions: read-all
+permissions: 
+  contents: read
 
 jobs:
   R-CMD-check:

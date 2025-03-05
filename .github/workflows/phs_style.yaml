@@ -5,7 +5,9 @@ on:
 
 name: style.yaml
 
-permissions: read-all
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   style:

@@ -5,7 +5,8 @@ on:
 
 name: phs_test_coverage.yaml
 
-permissions: read-all
+permissions: 
+  contents: read
 
 jobs:
   test-coverage:
