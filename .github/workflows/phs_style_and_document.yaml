@@ -39,7 +39,7 @@ jobs:
           needs: |
             website
             coverage
-	    
+
       - name: Enable styler cache
         run: styler::cache_activate()
         shell: Rscript {0}
@@ -71,13 +71,13 @@ jobs:
         shell: Rscript {0}
 
       - name: Commit and push changes
-        id: commit_step
+        id: commit_step_style
         uses: stefanzweifel/git-auto-commit-action@e348103e9026cc0eee72ae06630dbe30c8bf7a79 # v5.1.0
         with:
           commit_message: "Style code (GHA)"
 
       - name: Create Pull Request
-        if: steps.commit_step.outcome == 'failure'
+        if: steps.commit_step_style.outcome == 'failure'
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           commit-message: "Style code (GHA)"
@@ -97,13 +97,13 @@ jobs:
         shell: Rscript {0}
 
       - name: Commit and push changes
-        id: commit_step
+        id: commit_step_document
         uses: stefanzweifel/git-auto-commit-action@e348103e9026cc0eee72ae06630dbe30c8bf7a79 # v5.1.0
         with:
           commit_message: "Document package (GHA)"
 
       - name: Create Pull Request
-        if: steps.commit_step.outcome == 'failure'
+        if: steps.commit_step_document.outcome == 'failure'
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           commit-message: "Document package (GHA)"
