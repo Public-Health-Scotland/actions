@@ -32,15 +32,14 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@14a7e741c1cb130261263aa1593718ba42cf443b # v2.11.2
         with:
-		  extra-packages: |
-		    any::styler
-		    any::roxygen2
-		    any::desc
+          extra-packages: |
+            any::styler
+            any::roxygen2
+            any::desc
           needs: |
-		    styler
-			roxygen2
-			desc
-
+            website
+            coverage
+	    
       - name: Enable styler cache
         run: styler::cache_activate()
         shell: Rscript {0}
