@@ -10,23 +10,15 @@ permissions:
   pull-requests: read
 
 jobs:
-   Style:
-    uses: ./.github/workflows/phs_style.yaml
-    permissions:
-      contents: write
-      pull-requests: write
-    secrets: inherit
-
-   Document:
-    needs: [Style]
-    uses: ./.github/workflows/phs_document.yaml
+   Style_and_document:
+    uses: ./.github/workflows/phs_style_and_document.yaml
     permissions:
       contents: write
       pull-requests: write
     secrets: inherit
    
    R-CMD-check:
-    needs: [Style, Document]
+    needs: [Style_and_document]
     uses: ./.github/workflows/phs_R-CMD-check.yaml
     permissions: 
       contents: read
