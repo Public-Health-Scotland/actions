@@ -18,6 +18,19 @@ env:
   MAX_PARALLEL:  ${{ inputs.limit_parallel == false &&  10 || 3 }}
   
 jobs:
+  set-max-parallel:
+    runs-on: ubuntu-latest
+    outputs:
+      max-parallel: ${{ steps.set-max-parallel.outputs.max-parallel }}
+    steps:
+      - id: set-max-parallel
+        run: |
+          if [ "${{ inputs.limit_parallel }}" == "true" ]; then
+            echo "max-parallel=3" >> $GITHUB_OUTPUT
+          else
+            echo "max-parallel=10" >> $GITHUB_OUTPUT
+        shell: bash
+        
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
@@ -43,7 +56,7 @@ jobs:
 
           # An approximation of the PHS RStudio setup on the Posit Workbench
           - {os: ubuntu-latest, r: '4.4.2'}
-      max-parallel: ${{ env.MAX_PARALLEL }}
+      max-parallel: ${{ needs.set-max-parallel.outputs.max-parallel }}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
