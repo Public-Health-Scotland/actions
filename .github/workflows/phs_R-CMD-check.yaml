@@ -2,33 +2,13 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   workflow_call:
-    inputs:
-      limit_parallel:
-        required: false
-        type: boolean
-        default: false
-        description: "Limit concurrent jobs for this workflow to 3 (default: false)"
-
+  
 name: R-CMD-check.yaml
 
 permissions: 
   contents: read
   
-jobs:
-  set-max-parallel:
-    runs-on: ubuntu-latest
-    outputs:
-      max-parallel: ${{ steps.set-max-parallel.outputs.max-parallel }}
-    steps:
-      - id: set-max-parallel
-        run: |
-          if [ "${{ inputs.limit_parallel }}" == "true" ]; then
-            echo "max-parallel=3" >> $GITHUB_OUTPUT
-          else
-            echo "max-parallel=10" >> $GITHUB_OUTPUT
-          fi
-        shell: bash
-        
+jobs:      
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
@@ -54,7 +34,6 @@ jobs:
 
           # An approximation of the PHS RStudio setup on the Posit Workbench
           - {os: ubuntu-latest, r: '4.4.2'}
-      max-parallel: ${{ needs.set-max-parallel.outputs.max-parallel }}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
