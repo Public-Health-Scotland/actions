@@ -13,9 +13,6 @@ name: R-CMD-check.yaml
 
 permissions: 
   contents: read
-
-env:
-  MAX_PARALLEL:  ${{ inputs.limit_parallel == false &&  10 || 3 }}
   
 jobs:
   set-max-parallel:
@@ -29,6 +26,7 @@ jobs:
             echo "max-parallel=3" >> $GITHUB_OUTPUT
           else
             echo "max-parallel=10" >> $GITHUB_OUTPUT
+          fi
         shell: bash
         
   R-CMD-check:
