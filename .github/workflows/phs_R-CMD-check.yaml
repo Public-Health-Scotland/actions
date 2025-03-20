@@ -40,8 +40,7 @@ jobs:
 
           # An approximation of the PHS RStudio setup on the Posit Workbench
           - {os: ubuntu-latest, r: '4.4.2'}
-      ${{ if inputs.limit_parallel == true }}:
-        max-parallel: 3
+        max-parallel: ${{ inputs.limit_parallel == true && 3 || null }}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
