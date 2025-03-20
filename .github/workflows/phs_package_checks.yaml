@@ -8,25 +8,32 @@ name: phs_package_checks.yaml
 permissions:
   contents: read
   pull-requests: read
-
+  
 jobs:
-   Style_and_document:
+  Style_and_document:
     uses: ./.github/workflows/phs_style_and_document.yaml
     permissions:
       contents: write
       pull-requests: write
     secrets: inherit
-   
-   R-CMD-check:
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+  R-CMD-check:
     needs: [Style_and_document]
     uses: ./.github/workflows/phs_R-CMD-check.yaml
-    permissions: 
+    permissions:
       contents: read
     secrets: inherit
-
-   test-coverage:
+    concurrency:
+      group: package-checks-queue
+      cancel-in-progress: false
+  test-coverage:
     needs: [R-CMD-check]
     uses: ./.github/workflows/phs_test_coverage.yaml
-    permissions: 
+    permissions:
       contents: read
     secrets: inherit
+    concurrency:
+      group: package-checks-queue
+      cancel-in-progress: false
