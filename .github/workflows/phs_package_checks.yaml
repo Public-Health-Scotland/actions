@@ -31,8 +31,6 @@ jobs:
     permissions:
       contents: read
     secrets: inherit
-    with:
-      limit_parallel: ${{ inputs.limit_parallel }}
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
