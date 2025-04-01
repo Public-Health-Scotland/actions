@@ -43,3 +43,9 @@ jobs:
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('test-coverage-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
+  pkgdown:
+    needs: [Style_and_document]
+    uses: ./.github/workflows/phs_pkgdown.yaml
+    permissions:
+      contents: write
+    secrets: inherit    
