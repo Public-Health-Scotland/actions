@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   pkgdown:
-    name: "Build the pkgdown site and deploy to the `gh-pages` branch"
+    name: "Build and deploy the pkgdown site"
     runs-on: ubuntu-latest
     # Only restrict concurrency for non-PR jobs
     concurrency:
@@ -38,7 +38,7 @@ jobs:
           needs: website
 
       - name: Build site
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE, override = list(bootstrap = 5))
+        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages 🚀
