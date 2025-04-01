@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   pkgdown:
+    name: "Build the pkgdown site and deploy to the `gh-pages` branch"
     runs-on: ubuntu-latest
     # Only restrict concurrency for non-PR jobs
     concurrency:
