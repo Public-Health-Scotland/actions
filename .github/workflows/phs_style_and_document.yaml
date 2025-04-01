@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   phs_style_and_document:
-    name: "Style and Document the code (using {styler} and {roxygen2})"
+    name: "Automatically style and document the code"
     runs-on: ubuntu-latest
     permissions:
       contents: write
