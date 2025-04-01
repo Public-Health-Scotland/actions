@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   test-coverage:
+    name: "Report on test coverage"
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
