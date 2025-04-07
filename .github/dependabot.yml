@@ -10,3 +10,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      patch:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
