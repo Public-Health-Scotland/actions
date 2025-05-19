@@ -79,6 +79,16 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
+  Document:
+    needs: [Style]
+    uses: ./.github/workflows/phs_document.yaml
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets: inherit
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
   Build_README:
     needs: [Style]
     uses: $/.github/workflows/phs_build_readme.yaml
@@ -173,16 +183,12 @@ jobs:
           script: |
             const allSuccess = ${{ needs.Style.result == 'success' &&
                                     needs.Document.result == 'success' && 
-                       needs.Build_README.result == 'success' &&
-                       needs.R-CMD-check-core.result == 'success' &&
-                       (needs.R-CMD-check-extended.result == 'success' ||
-                        needs.R-CMD-check-extended.result == 'skipped') &&
-                       needs.test-coverage.result == 'success' &&
-                       (needs.lint.result == 'success' ||
-                        needs.lint.result == 'skipped') &&
-                       (needs.pkgdown.result == 'success' ||
-                        needs.pkgdown.result == 'skipped')
-                    }};
+                                   needs.Build_README.result == 'success' &&
+                                    needs.R-CMD-check-core.result == 'success' &&
+                                    (needs.R-CMD-check-extended.result == 'success' || needs.R-CMD-check-extended.result == 'skipped') &&
+                                    needs.test-coverage.result == 'success' &&
+                                    (needs.pkgdown.result == 'success' || needs.pkgdown.result == 'skipped')
+                                    }};
 
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
