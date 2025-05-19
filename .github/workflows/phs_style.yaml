@@ -1,0 +1,67 @@
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  workflow_call:
+
+name: phs_style.yaml
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  phs_style:
+    name: "Automatically style the code using air"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      
+      - name: Install posit-dev/air
+        uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237 # v1.0.0
+
+      - name: Include standard air.toml (overwrite existing)
+        run: |
+          echo '[format]' > air.toml
+          echo 'line-ending = "lf"' >> air.toml
+
+      - name: Add air.toml to .Rbuildignore if it exists
+        run: |
+          if [ -f .Rbuildignore ]; then
+            grep -qxF 'air.toml' .Rbuildignore || echo 'air.toml' >> .Rbuildignore
+          fi
+          
+      - name: Format using air
+        run: air format . 
+
+      - name: Commit and push changes
+        id: commit_step_style
+        uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5.2.0
+        with:
+          commit_message: "Style code (GHA)"
+        continue-on-error: true
+
+      - name: Create Pull Request
+        if: ${{ steps.commit_step_style.outputs.changes_detected == 'true' && steps.commit_step_style.outcome == 'failure' }}
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          commit-message: "Style code (GHA)"
+          branch: auto-style-code
+          delete-branch: true
+          title: "Style code (GHA)"
+          labels: maintenance
+          base: ${{ github.event.pull_request.base.ref }} 
+          body: |
+            This Pull Request was automatically created to apply styling changes to your code.
+            Please review and merge this PR.
+          assignees: ${{ github.actor }}
+          reviewers: ${{ github.actor }}
+
