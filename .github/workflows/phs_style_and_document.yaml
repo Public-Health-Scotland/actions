@@ -10,8 +10,48 @@ permissions:
   pull-requests: read
 
 jobs:
-  phs_style_and_document:
-    name: "Automatically style and document the code"
+  style:
+    name: "Automatically style the code using air"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Install posit-dev/air
+        uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237 # v1.0.0
+
+      - name: Format
+        run: air format .
+
+      - name: Commit and push changes
+        id: commit_step_style
+        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
+        with:
+          commit_message: "Style code (GHA)"
+
+      - name: Create Pull Request
+        if: steps.commit_step_style.outcome == 'failure'
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          commit-message: "Style code (GHA)"
+          branch: auto-style-code
+          delete-branch: true
+          title: "Style code (GHA)"
+          labels: maintenance
+          assignees: ${{ github.actor }}
+          reviewers: ${{ github.actor }}
+
+  document:
+    name: "Automatically document the code using roxygen2"
+    needs: style
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -34,61 +74,12 @@ jobs:
         uses: r-lib/actions/setup-r-dependencies@bd49c52ffe281809afa6f0fecbf37483c5dd0b93 # v2.11.3
         with:
           extra-packages: |
-            any::styler
             any::roxygen2
             any::desc
           needs: |
             website
             coverage
-
-      - name: Enable styler cache
-        run: styler::cache_activate()
-        shell: Rscript {0}
-
-      - name: Determine cache location
-        id: styler-location
-        run: |
-          cat(
-            "location=",
-            styler::cache_info(format = "tabular")$location,
-            "\n",
-            file = Sys.getenv("GITHUB_OUTPUT"),
-            append = TRUE,
-            sep = ""
-          )
-        shell: Rscript {0}
-
-      - name: Cache styler
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ steps.styler-location.outputs.location }}
-          key: ${{ runner.os }}-styler-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-styler-
-            ${{ runner.os }}-
-
-      - name: Style
-        run: styler::style_pkg()
-        shell: Rscript {0}
-
-      - name: Commit and push changes
-        id: commit_step_style
-        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
-        with:
-          commit_message: "Style code (GHA)"
-
-      - name: Create Pull Request
-        if: steps.commit_step_style.outcome == 'failure'
-        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
-        with:
-          commit-message: "Style code (GHA)"
-          branch: auto-style-code
-          delete-branch: true
-          title: "Style code (GHA)"
-          labels: maintenance
-          assignees: ${{ github.actor }}
-          reviewers: ${{ github.actor }}
-
+            
       - name: Normalise DESCRIPTION
         run: desc::desc_normalize()
         shell: Rscript {0}
@@ -108,7 +99,7 @@ jobs:
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           commit-message: "Document package (GHA)"
-          branch: auto-style-code
+          branch: auto-document-code
           delete-branch: true
           title: "Document package (GHA)"
           labels: maintenance
