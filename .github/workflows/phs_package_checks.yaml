@@ -16,8 +16,18 @@ permissions:
   pull-requests: read
   
 jobs:
-  Style_and_document:
-    uses: ./.github/workflows/phs_style_and_document.yaml
+  Style:
+    uses: ./.github/workflows/phs_style.yaml
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets: inherit
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+  Document:
+    needs: [Style]
+    uses: ./.github/workflows/phs_document.yaml
     permissions:
       contents: write
       pull-requests: write
@@ -26,7 +36,7 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
   R-CMD-check:
-    needs: [Style_and_document]
+    needs: [Document]
     uses: ./.github/workflows/phs_R-CMD-check.yaml
     permissions:
       contents: read
@@ -44,8 +54,8 @@ jobs:
       group: ${{ inputs.limit_parallel == false && format('test-coverage-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
   pkgdown:
-    needs: [Style_and_document]
+    needs: [Document]
     uses: ./.github/workflows/phs_pkgdown.yaml
     permissions:
       contents: write
-    secrets: inherit    
+    secrets: inherit

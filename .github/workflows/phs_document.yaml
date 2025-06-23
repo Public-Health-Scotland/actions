@@ -3,15 +3,15 @@
 on:
   workflow_call:
 
-name: phs_style_and_document.yaml
+name: phs_document.yaml
 
 permissions:
   contents: read
   pull-requests: read
 
 jobs:
-  style:
-    name: "Automatically style the code using air"
+  phs_document:
+    name: "Automatically re-build the package documentation"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -24,16 +24,13 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
-      
-      - name: Install posit-dev/air
-        uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237 # v1.0.0
 
       - name: Format
         run: air format . 
 
       - name: Commit and push changes
         id: commit_step_style
-        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
+        uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5.2.0
         with:
           commit_message: "Style code (GHA)"
 
