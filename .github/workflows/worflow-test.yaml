@@ -1,0 +1,86 @@
+name: Test Workflows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.yaml'
+      - '**.yml'
+  pull_request:
+    paths:
+      - '**.yaml'
+      - '**.yml'
+  workflow_dispatch:
+
+jobs:
+  lint-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Lint workflow files
+        uses: docker://rhysd/actionlint:latest
+        with:
+          args: -color
+          
+  validate-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install PyGithub
+        run: pip install PyGithub PyYAML
+        
+      - name: Validate workflow references
+        run: |
+          python .github/scripts/validate_workflow_refs.py
+          
+  test-with-mock-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create mock R package
+        run: |
+          mkdir -p mock-package/R
+          mkdir -p mock-package/man
+          mkdir -p mock-package/tests/testthat
+          
+          # Create minimal R package structure
+          echo 'Package: mockpkg
+          Version: 0.1.0
+          Title: Mock Package for Testing Workflows
+          Description: A minimal package to test GitHub Actions workflows.
+          Authors@R: person("Test", "User", email = "test@example.com", role = c("aut", "cre"))
+          License: MIT
+          Encoding: UTF-8
+          Roxygen: list(markdown = TRUE)
+          RoxygenNote: 7.2.0' > mock-package/DESCRIPTION
+          
+          # Create a simple R function with roxygen
+          echo "#' Add two numbers
+          #'
+          #' @param x A number
+          #' @param y A number
+          #' @return The sum of x and y
+          #' @export
+          add <- function(x, y) {
+            x + y
+          }" > mock-package/R/add.R
+          
+          # Create a simple test
+          echo "test_that(\"addition works\", {
+            expect_equal(add(2, 2), 4)
+          })" > mock-package/tests/testthat/test-add.R
+      
+      - name: Test style_and_document workflow
+        uses: ./.github/workflows/phs_style_and_document.yaml
+        with:
+          working-directory: ./mock-package
+          
+      # Add more workflow tests as needed
