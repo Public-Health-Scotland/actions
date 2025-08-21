@@ -27,6 +27,14 @@ jobs:
           extra-packages: any::covr, any::xml2
           needs: coverage
 
+      # Add caching for R packages
+      - name: Cache R packages
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ runner.os }}-r-${{ matrix.config.r }}-${{ hashFiles('**/DESCRIPTION') }}
+          restore-keys: ${{ runner.os }}-r-${{ matrix.config.r }}-
+
       - name: Test coverage
         run: |
           cov <- covr::package_coverage(
