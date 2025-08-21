@@ -18,22 +18,21 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          # Latest R versions
-          - {os: windows-latest, r: 'release'}
-          - {os: ubuntu-latest, r: 'release'}
-          - {os: macos-latest, r: 'release'}
+          # Core environments - always run these, even on draft PRs
+          - {os: ubuntu-latest, r: 'release', core: true}
+          - {os: windows-latest, r: '4.4.1', core: true} # PHS RStudio Desktop
+          - {os: ubuntu-latest, r: '4.4.2', core: true}  # PHS Posit Workbench
+          
+          # Extended environments - skip on draft PRs only
+          - {os: windows-latest, r: 'release', core: false}
+          - {os: macos-latest, r: 'release', core: false}
+          - {os: windows-latest, r: 'devel', http-user-agent: 'release', core: false}
+          - {os: ubuntu-latest, r: 'devel', http-user-agent: 'release', core: false}
+          - {os: ubuntu-latest, r: 'oldrel-1', core: false}
+          - {os: ubuntu-latest, r: 'oldrel-2', core: false}
 
-          # Development and recent releases
-          - {os: windows-latest, r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest, r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest, r: 'oldrel-1'}
-          - {os: ubuntu-latest, r: 'oldrel-2'}
-
-          # An approximation for the PHS RStudio Desktop installation
-          - {os: windows-latest, r: '4.4.1'}
-
-          # An approximation of the PHS RStudio setup on the Posit Workbench
-          - {os: ubuntu-latest, r: '4.4.2'}
+    # Skip extended environments on draft PRs
+    if: ${{ !github.event.pull_request.draft || matrix.config.core }}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
