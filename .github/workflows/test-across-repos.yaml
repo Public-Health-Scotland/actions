@@ -1,0 +1,47 @@
+name: Test Across Repositories
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to test (e.g., v1.7.0 or PR branch)'
+        required: true
+        type: string
+
+jobs:
+  test-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: [
+          'Public-Health-Scotland/phsmethods',
+          'Public-Health-Scotland/phsstyles',
+          'Public-Health-Scotland/phsopendata',
+          'Public-Health-Scotland/phstemplates',
+          'Public-Health-Scotland/phslookups',
+          'Public-Health-Scotland/slfhelper'
+        ]
+    steps:
+      - name: Checkout test repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repo }}
+          token: ${{ secrets.WORKFLOW_PAT }}
+      
+      - name: Update workflow file to use test version
+        run: |
+          sed -i 's|Public-Health-Scotland/actions/.github/workflows/phs_package_checks.yaml@[a-zA-Z0-9._-]*|Public-Health-Scotland/actions/.github/workflows/phs_package_checks.yaml@${{ github.event.inputs.version }}|' .github/workflows/*.yaml
+      
+      - name: Commit changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git commit -am "ci: Test with actions@${{ github.event.inputs.version }}"
+          git push
+      
+      # Monitor workflow run results
+      - name: Wait for workflows to complete
+        run: |
+          # Implementation requires GitHub API calls to monitor workflow runs
+          echo "Check workflow runs in ${{ matrix.repo }}"
