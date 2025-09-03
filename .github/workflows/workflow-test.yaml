@@ -81,7 +81,7 @@ jobs:
           })" > mock-package/tests/testthat/test-add.R
       
       - name: Test style_and_document workflow
-        uses: ./.github/workflows/phs_style_and_document.yaml
+        uses: ./.github/workflows/phs_package_checks.yaml
         with:
           working-directory: ./mock-package
           
