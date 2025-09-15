@@ -14,14 +14,18 @@ name: phs_package_checks.yaml
 permissions:
   contents: read
   pull-requests: read
+  statuses: read
   
 jobs:
   # Initial job to post status
   init:
     runs-on: ubuntu-latest
+    permissions:
+      statuses: write
     steps:
       - name: Create initial status check
         uses: actions/github-script@v7
+
         with:
           script: |
             await github.rest.repos.createCommitStatus({
