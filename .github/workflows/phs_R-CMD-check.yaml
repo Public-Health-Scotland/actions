@@ -94,7 +94,7 @@ jobs:
           use-public-rspm: true
       - uses: r-lib/actions/setup-r-dependencies@bd49c52ffe281809afa6f0fecbf37483c5dd0b93 # v2.11.3
         with:
-          dependencies: 'hard'
+          dependencies: '"hard"'
           cache: false
           extra-packages: |
             any::rcmdcheck
