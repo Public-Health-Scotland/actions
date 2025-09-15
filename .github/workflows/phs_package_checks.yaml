@@ -14,7 +14,7 @@ name: phs_package_checks.yaml
 permissions:
   contents: read
   pull-requests: read
-  statuses: read
+  statuses: write
   
 jobs:
   # Initial job to post status
