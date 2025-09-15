@@ -41,7 +41,6 @@ jobs:
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
 
   extended-check:
-    needs: core-check
     if: ${{ !github.event.pull_request.draft }}
     runs-on: ${{ matrix.config.os }}
     name: Extended R-CMD-check – ${{ matrix.config.os }} (${{ matrix.config.r }})
