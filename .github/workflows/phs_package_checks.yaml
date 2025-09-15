@@ -14,8 +14,27 @@ name: phs_package_checks.yaml
 permissions:
   contents: read
   pull-requests: read
+  statuses: write
   
 jobs:
+  # Initial job to post status
+  init:
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write
+    steps:
+      - name: Create initial status check
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'pending',
+              description: 'Package checks in progress',
+              context: 'PHS Package Checks'
+            });
   Style_and_document:
     uses: ./.github/workflows/phs_style_and_document.yaml
     permissions:
@@ -48,4 +67,29 @@ jobs:
     uses: ./.github/workflows/phs_pkgdown.yaml
     permissions:
       contents: write
-    secrets: inherit    
+    secrets: inherit
+# Final job to update status
+  finalize:
+    needs: [Style_and_document, R-CMD-check, test-coverage, pkgdown]
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      statuses: write
+    steps:
+      - name: Update final status
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const allSuccess = ${{ needs.Style_and_document.result == 'success' && 
+                                    needs.R-CMD-check.result == 'success' && 
+                                    needs.test-coverage.result == 'success' && 
+                                    needs.pkgdown.result == 'success' }};
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: allSuccess ? 'success' : 'failure',
+              description: allSuccess ? 'All checks passed' : 'Some checks failed',
+              context: 'PHS Package Checks'
+            });
