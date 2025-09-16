@@ -28,6 +28,10 @@ jobs:
       - name: Install posit-dev/air
         uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237 # v1.0.0
 
+      - name: Include standard air.toml
+        run: |
+          curl -o air.toml https://raw.githubusercontent.com/Public-Health-Scotland/actions/${{ github.action_ref }}/air.toml
+
       - name: Format
         run: air format . 
 
