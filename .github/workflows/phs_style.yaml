@@ -28,11 +28,18 @@ jobs:
       - name: Install posit-dev/air
         uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237 # v1.0.0
 
-      - name: Include standard air.toml
+      - name: Include standard air.toml (overwrite existing)
         run: |
-          curl -o air.toml https://raw.githubusercontent.com/Public-Health-Scotland/actions/${{ github.action_ref }}/air.toml
+          echo '[format]' > air.toml
+          echo 'line-ending = "lf"' >> air.toml
 
-      - name: Format
+      - name: Add air.toml to .Rbuildignore if it exists
+        run: |
+          if [ -f .Rbuildignore ]; then
+            grep -qxF 'air.toml' .Rbuildignore || echo 'air.toml' >> .Rbuildignore
+          fi
+          
+      - name: Format using air
         run: air format . 
 
       - name: Commit and push changes
