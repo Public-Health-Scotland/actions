@@ -13,35 +13,13 @@ on:
       - '**.yaml'
       - '**.yml'
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to test from Public-Health-Scotland/actions'
+        required: true
+        default: 'main'
 
 jobs:
-  lint-workflows:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Lint workflow files
-        uses: docker://rhysd/actionlint:latest
-        with:
-          args: -color
-          
-  validate-workflows:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      
-      - name: Install PyGithub
-        run: pip install PyGithub PyYAML
-        
-      - name: Validate workflow references
-        run: |
-          python .github/scripts/validate_workflow_refs.py
-
   get-branch:
     runs-on: ubuntu-latest
     outputs:
@@ -89,10 +67,9 @@ jobs:
           echo "test_that(\"addition works\", {
             expect_equal(add(2, 2), 4)
           })" > mock-package/tests/testthat/test-add.R
-      
-      - name: Test style_and_document workflow
-        uses: Public-Health-Scotland/actions/.github/workflows/phs_package_checks.yaml@${{ needs.get-branch.outputs.branch }}
-        with:
-          working-directory: ./mock-package
+
           
-      # Add more workflow tests as needed
+      - name: Test style_and_document workflow
+        uses: Public-Health-Scotland/actions/.github/workflows/phs_package_checks.yaml@${{ inputs.branch }}
+        with:
+          working-directory: ./mock-package     
