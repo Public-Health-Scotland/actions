@@ -13,33 +13,18 @@ on:
       - '**.yaml'
       - '**.yml'
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to test from Public-Health-Scotland/actions'
-        required: true
-        default: 'main'
 
-jobs:
-  get-branch:
-    runs-on: ubuntu-latest
-    outputs:
-      branch: ${{ steps.extract.outputs.branch }}
-    steps:
-      - name: Extract branch name
-        id: extract
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-          
+jobs:         
   test-with-mock-package:
-    needs: get-branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
       - name: Create mock R package
         run: |
-          mkdir -p mock-package/R
-          mkdir -p mock-package/man
-          mkdir -p mock-package/tests/testthat
+          mkdir -p R
+          mkdir -p man
+          mkdir -p tests/testthat
           
           # Create minimal R package structure
           echo 'Package: mockpkg
@@ -50,7 +35,7 @@ jobs:
           License: MIT
           Encoding: UTF-8
           Roxygen: list(markdown = TRUE)
-          RoxygenNote: 7.2.0' > mock-package/DESCRIPTION
+          RoxygenNote: 7.2.0' > DESCRIPTION
           
           # Create a simple R function with roxygen
           echo "#' Add two numbers
@@ -61,15 +46,13 @@ jobs:
           #' @export
           add <- function(x, y) {
             x + y
-          }" > mock-package/R/add.R
+          }" > R/add.R
           
           # Create a simple test
           echo "test_that(\"addition works\", {
             expect_equal(add(2, 2), 4)
-          })" > mock-package/tests/testthat/test-add.R
+          })" > tests/testthat/test-add.R
 
           
-      - name: Test style_and_document workflow
-        uses: Public-Health-Scotland/actions/.github/workflows/phs_package_checks.yaml@${{ inputs.branch }}
-        with:
-          working-directory: ./mock-package     
+      - name: Test phs_package_checks workflows
+        uses: ./.github/workflows/phs_package_checks.yaml@${{ inputs.branch }}
