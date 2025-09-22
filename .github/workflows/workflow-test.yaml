@@ -1,5 +1,3 @@
-permissions:
-  contents: read
 name: Test Workflows
 
 on:
@@ -14,20 +12,32 @@ on:
       - '**.yml'
   workflow_dispatch:
 
-jobs:         
+permissions:
+  contents: write
+  pull-requests: write
+  statuses: write
+
+jobs:
   test-with-mock-package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Create mock R package
+      - name: Checkout Public Health Scotland Actions repo
+        uses: actions/checkout@v4
+        
+      - name: Setup testing environment
         run: |
+          # Create a new subdirectory to serve as the mock R package's root
+          mkdir mock-package-test
+          cd mock-package-test
+          
+          # Create the mock R package structure
           mkdir -p R
           mkdir -p man
           mkdir -p tests/testthat
           
-          # Create minimal R package structure
-          echo 'Package: mockpkg
+          # Create minimal R package files
+          cat << EOT > DESCRIPTION
+          Package: mockpkg
           Version: 0.1.0
           Title: Mock Package for Testing Workflows
           Description: A minimal package to test GitHub Actions workflows.
@@ -35,10 +45,11 @@ jobs:
           License: MIT
           Encoding: UTF-8
           Roxygen: list(markdown = TRUE)
-          RoxygenNote: 7.2.0' > DESCRIPTION
+          RoxygenNote: 7.2.0
+          EOT
           
-          # Create a simple R function with roxygen
-          echo "#' Add two numbers
+          cat << EOT > R/add.R
+          #' Add two numbers
           #'
           #' @param x A number
           #' @param y A number
@@ -46,13 +57,19 @@ jobs:
           #' @export
           add <- function(x, y) {
             x + y
-          }" > R/add.R
+          }
+          EOT
           
-          # Create a simple test
-          echo "test_that(\"addition works\", {
+          cat << EOT > tests/testthat/test-add.R
+          test_that("addition works", {
             expect_equal(add(2, 2), 4)
-          })" > tests/testthat/test-add.R
-
+          })
+          EOT
           
-      - name: Test phs_package_checks workflows
-        uses: ./.github/workflows/phs_package_checks.yaml
+          # Copy the workflows into the mock package
+          cp -R ../.github .github
+          
+      - name: Run phs_package_checks workflow
+        uses: ./mock-package-test/.github/workflows/phs_package_checks.yaml
+        with:
+          limit_parallel: false
