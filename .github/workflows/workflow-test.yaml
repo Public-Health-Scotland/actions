@@ -11,6 +11,11 @@ on:
       - '**.yaml'
       - '**.yml'
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch, tag or SHA to checkout'
+        required: true
+        default: 'main'
 
 permissions:
   contents: write
@@ -23,20 +28,18 @@ jobs:
     steps:
       - name: Checkout Public Health Scotland Actions repo
         uses: actions/checkout@v4
-        
-      - name: Setup testing environment
+        with:
+          ref: ${{ github.event.inputs.ref || github.event.pull_request.head.ref || github.ref }}
+          path: phs-actions-repo # Checkout to a subdirectory
+
+      - name: Create mock R package
         run: |
-          # Create a new subdirectory to serve as the mock R package's root
-          mkdir mock-package-test
-          cd mock-package-test
-          
-          # Create the mock R package structure
-          mkdir -p R
-          mkdir -p man
-          mkdir -p tests/testthat
+          mkdir -p mock-package-test/R
+          mkdir -p mock-package-test/man
+          mkdir -p mock-package-test/tests/testthat
           
           # Create minimal R package files
-          cat << EOT > DESCRIPTION
+          cat << EOT > mock-package-test/DESCRIPTION
           Package: mockpkg
           Version: 0.1.0
           Title: Mock Package for Testing Workflows
@@ -48,7 +51,7 @@ jobs:
           RoxygenNote: 7.2.0
           EOT
           
-          cat << EOT > R/add.R
+          cat << EOT > mock-package-test/R/add.R
           #' Add two numbers
           #'
           #' @param x A number
@@ -60,15 +63,15 @@ jobs:
           }
           EOT
           
-          cat << EOT > tests/testthat/test-add.R
+          cat << EOT > mock-package-test/tests/testthat/test-add.R
           test_that("addition works", {
             expect_equal(add(2, 2), 4)
           })
           EOT
           
-          # Copy the workflows into the mock package
-          cp -R ../.github .github
-          
+      - name: Copy workflows into mock package
+        run: cp -R phs-actions-repo/.github mock-package-test/.github
+
       - name: Run phs_package_checks workflow
         uses: ./mock-package-test/.github/workflows/phs_package_checks.yaml
         with:
