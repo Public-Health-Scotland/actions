@@ -41,8 +41,18 @@ jobs:
       - name: Validate workflow references
         run: |
           python .github/scripts/validate_workflow_refs.py
+
+  get-branch:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.extract.outputs.branch }}
+    steps:
+      - name: Extract branch name
+        id: extract
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
           
   test-with-mock-package:
+    needs: get-branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -81,7 +91,7 @@ jobs:
           })" > mock-package/tests/testthat/test-add.R
       
       - name: Test style_and_document workflow
-        uses: Public-Health-Scotland/actions/.github/workflows/phs_package_checks.yaml@${{ github.head_ref }}
+        uses: Public-Health-Scotland/actions/.github/workflows/phs_package_checks.yaml@${{ needs.get-branch.outputs.branch }}
         with:
           working-directory: ./mock-package
           
