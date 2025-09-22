@@ -16,13 +16,17 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Checkout repo 
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: r-lib/actions/setup-r@bd49c52ffe281809afa6f0fecbf37483c5dd0b93 # v2.11.3
+      - name: Install and set up R
+        id: setup-r
+        uses: r-lib/actions/setup-r@bd49c52ffe281809afa6f0fecbf37483c5dd0b93 # v2.11.3
         with:
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-r-dependencies@bd49c52ffe281809afa6f0fecbf37483c5dd0b93 # v2.11.3
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@bd49c52ffe281809afa6f0fecbf37483c5dd0b93 # v2.11.3
         with:
           extra-packages: any::covr, any::xml2
           needs: coverage
@@ -32,8 +36,8 @@ jobs:
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-${{ matrix.config.r }}-${{ hashFiles('**/DESCRIPTION') }}
-          restore-keys: ${{ runner.os }}-r-${{ matrix.config.r }}-
+          key: ${{ runner.os }}-r-${{ steps.setup-r.outputs.installed-r-version }}-${{ hashFiles('**/DESCRIPTION') }}
+          restore-keys: ${{ runner.os }}-r-${{ steps.setup-r.outputs.installed-r-version }}-
 
       - name: Test coverage
         run: |
