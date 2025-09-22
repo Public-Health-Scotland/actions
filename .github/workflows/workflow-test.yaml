@@ -81,7 +81,7 @@ jobs:
           })" > mock-package/tests/testthat/test-add.R
       
       - name: Test style_and_document workflow
-        uses: ./.github/workflows/phs_package_checks.yaml
+        uses: Public-Health-Scotland/actions/.github/workflows/phs_package_checks.yaml@${{ github.head_ref }}
         with:
           working-directory: ./mock-package
           
