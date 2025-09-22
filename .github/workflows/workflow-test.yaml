@@ -55,4 +55,4 @@ jobs:
 
           
       - name: Test phs_package_checks workflows
-        uses: ./.github/workflows/phs_package_checks.yaml@${{ inputs.branch }}
+        uses: ./.github/workflows/phs_package_checks.yaml
