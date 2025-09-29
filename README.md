@@ -1,3 +1,5 @@
+# Public Health Scotland GitHub Workflows
+
 <!-- badges: start -->
 [![GitHub release (latest by
 date)](https://img.shields.io/github/v/release/Public-Health-Scotland/actions)](https://github.com/Public-Health-Scotland/Public-Health-Scotland/actions/latest)
@@ -5,12 +7,13 @@ date)](https://img.shields.io/github/v/release/Public-Health-Scotland/actions)](
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10780/badge)](https://www.bestpractices.dev/projects/10780)
 [![CodeQL](https://github.com/Public-Health-Scotland/actions/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Public-Health-Scotland/actions/actions/workflows/github-code-scanning/codeql)
 <!-- badges: end -->
-# Public Health Scotland GitHub Workflows
 
 ## Description
+
 This repository houses GitHub workflows for the Public Health Scotland (PHS) organisation. It centralises the management of workflows to ensure consistent Continuous Integration (CI) practices across PHS projects.
 
 ## Contributing
+
 Guidelines for contributing to the repository. Contributions should be done entirely on GitHub. Follow these steps:
 
 1. **Fork the Repository:** Click the “Fork” button at the top right of the repository page to create a copy of the repository in your GitHub account.
