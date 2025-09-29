@@ -5,13 +5,7 @@ name: Lint and validate workflows
 on:
   push:
     branches: [main]
-    paths:
-      - '**.yaml'
-      - '**.yml'
   pull_request:
-    paths:
-      - '**.yaml'
-      - '**.yml'
   workflow_dispatch:
 
 jobs:
