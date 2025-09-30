@@ -44,9 +44,27 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
-  R-CMD-check:
+  R-CMD-check-core:
     needs: [Style_and_document]
-    uses: ./.github/workflows/phs_R-CMD-check.yaml
+    uses: ./.github/workflows/phs_R-CMD-check-core.yaml
+    permissions:
+      contents: read
+    secrets: inherit
+    concurrency:
+      group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
+      cancel-in-progress: false
+  R-CMD-check-extended:
+    needs: [Style_and_document]
+    uses: ./.github/workflows/phs_R-CMD-check-extended.yaml
+    permissions:
+      contents: read
+    secrets: inherit
+    concurrency:
+      group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
+      cancel-in-progress: false
+  R-CMD-check-no-suggests:
+    needs: [R-CMD-check-core]
+    uses: ./.github/workflows/phs_R-CMD-check-no-suggests.yaml
     permissions:
       contents: read
     secrets: inherit
@@ -54,7 +72,7 @@ jobs:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
   test-coverage:
-    needs: [R-CMD-check]
+    needs: [R-CMD-check-core]
     uses: ./.github/workflows/phs_test_coverage.yaml
     permissions:
       contents: read
@@ -70,7 +88,7 @@ jobs:
     secrets: inherit
 # Final job to update status
   finalize:
-    needs: [Style_and_document, R-CMD-check, test-coverage, pkgdown]
+    needs: [Style_and_document, R-CMD-check-core, test-coverage, pkgdown]
     runs-on: ubuntu-latest
     if: always()
     permissions:
@@ -81,7 +99,7 @@ jobs:
         with:
           script: |
             const allSuccess = ${{ needs.Style_and_document.result == 'success' && 
-                                    needs.R-CMD-check.result == 'success' && 
+                                    needs.R-CMD-check-core.result == 'success' && 
                                     needs.test-coverage.result == 'success' && 
                                     needs.pkgdown.result == 'success' }};
             
