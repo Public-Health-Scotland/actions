@@ -54,9 +54,27 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
-  R-CMD-check:
-    needs: [Document]
-    uses: ./.github/workflows/phs_R-CMD-check.yaml
+  R-CMD-check-core:
+    needs: [Style, Document]
+    uses: ./.github/workflows/phs_R-CMD-check-core.yaml
+    permissions:
+      contents: read
+    secrets: inherit
+    concurrency:
+      group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
+      cancel-in-progress: false
+  R-CMD-check-extended:
+    needs: [Style, Document]
+    uses: ./.github/workflows/phs_R-CMD-check-extended.yaml
+    permissions:
+      contents: read
+    secrets: inherit
+    concurrency:
+      group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
+      cancel-in-progress: false
+  R-CMD-check-no-suggests:
+    needs: [R-CMD-check-core]
+    uses: ./.github/workflows/phs_R-CMD-check-no-suggests.yaml
     permissions:
       contents: read
     secrets: inherit
@@ -64,7 +82,7 @@ jobs:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
   test-coverage:
-    needs: [R-CMD-check]
+    needs: [R-CMD-check-core]
     uses: ./.github/workflows/phs_test_coverage.yaml
     permissions:
       contents: read
@@ -73,14 +91,14 @@ jobs:
       group: ${{ inputs.limit_parallel == false && format('test-coverage-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
   pkgdown:
-    needs: [Document]
+    needs: [Style, Document]
     uses: ./.github/workflows/phs_pkgdown.yaml
     permissions:
       contents: write
     secrets: inherit
   # Final job to update status
   finalize:
-    needs: [test-coverage]
+    needs: [Style, Document R-CMD-check-core, test-coverage, pkgdown]
     runs-on: ubuntu-latest
     if: always()
     permissions:
@@ -92,7 +110,7 @@ jobs:
           script: |
             const allSuccess = ${{ needs.Style.result == 'success' &&
                                     needs.Document.result == 'success' &&
-                                    needs.R-CMD-check.result == 'success' &&
+                                    needs.R-CMD-check-core.result == 'success' &&
                                     needs.test-coverage.result == 'success'}};
 
             await github.rest.repos.createCommitStatus({
