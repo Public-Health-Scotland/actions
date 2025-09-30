@@ -98,7 +98,7 @@ jobs:
     secrets: inherit
   # Final job to update status
   finalize:
-    needs: [Style, Document R-CMD-check-core, test-coverage, pkgdown]
+    needs: [Style, Document, R-CMD-check-core, test-coverage, pkgdown]
     runs-on: ubuntu-latest
     if: always()
     permissions:
