@@ -78,16 +78,8 @@ jobs:
           commit_message: "Style code (GHA)"
         continue-on-error: true
 
-      - name: Check outputs
-        run: |
-          echo "Changed detected - ${{ steps.commit_step_style.outputs.changes_detected }}"
-          echo "Commit hash - ${{ steps.commit_step_style.outputs.commit_hash }}"
-          echo "Step outcome - ${{ steps.commit_step_style.outcome }}"
-          echo "Step conclusion - ${{ steps.commit_step_style.conclusion }}"
-          echo "Test new IF - ${{ steps.commit_step_style.outputs.changes_detected == 'true' && steps.commit_step_style.outcome == 'failure' }}"
-
       - name: Create Pull Request
-        if: ${{ failure() && steps.commit_step_style.outputs.changes_detected == 'true' }}
+        if: ${{ steps.commit_step_style.outputs.changes_detected == 'true' && steps.commit_step_style.outcome == 'failure' }}
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           commit-message: "Style code (GHA)"
@@ -117,7 +109,7 @@ jobs:
         continue-on-error: true
 
       - name: Create Pull Request
-        if: ${{ failure() && steps.commit_step_document.outputs.changes_detected == 'true' }}
+        if: ${{ steps.commit_step_document.outputs.changes_detected == 'true' && steps.commit_step_document.outcome == 'failure' }}
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           commit-message: "Document package (GHA)"
