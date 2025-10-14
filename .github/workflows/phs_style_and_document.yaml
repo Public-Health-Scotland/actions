@@ -87,6 +87,7 @@ jobs:
           delete-branch: true
           title: "Style code (GHA)"
           labels: maintenance
+          base: ${{ github.event.pull_request.base.ref }}
           body: |
             This Pull Request was automatically created to apply styling changes to your code.
             Please review and merge this PR.
@@ -118,6 +119,7 @@ jobs:
           delete-branch: true
           title: "Document package (GHA)"
           labels: maintenance
+          base: ${{ github.event.pull_request.base.ref }}
           body: |
             This Pull Request was automatically created to apply documentation changes to your code.
             Please review and merge this PR.
