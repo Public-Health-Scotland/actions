@@ -82,7 +82,9 @@ jobs:
         run: |
           echo "Changed detected - ${{ steps.commit_step_style.outputs.changes_detected }}"
           echo "Commit hash - ${{ steps.commit_step_style.outputs.commit_hash }}"
-          echo "Test new IF - ${{ steps.commit_step_style.outputs.changes_detected == 'true' && steps.commit_step_style.outputs.commit_hash == '' }}"
+          echo "Step outcome - ${{ steps.commit_step_style.outcome }}"
+          echo "Step conclusion - ${{ steps.commit_step_style.conclusion }}"
+          echo "Test new IF - ${{ steps.commit_step_style.outputs.changes_detected == 'true' && steps.commit_step_style.outcome == 'failure' }}"
 
       - name: Create Pull Request
         if: ${{ failure() && steps.commit_step_style.outputs.changes_detected == 'true' }}
