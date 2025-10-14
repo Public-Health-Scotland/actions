@@ -76,9 +76,10 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
         with:
           commit_message: "Style code (GHA)"
+        continue-on-error: true
 
       - name: Create Pull Request
-        if: steps.commit_step_style.outcome == 'failure'
+        if: ${{ failure() && steps.commit_step_style.outputs.changes_detected == 'true' }}
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           commit-message: "Style code (GHA)"
@@ -86,8 +87,11 @@ jobs:
           delete-branch: true
           title: "Style code (GHA)"
           labels: maintenance
+          body: |
+            This Pull Request was automatically created to apply styling changes to your code.
+            Please review and merge this PR.
           assignees: ${{ github.actor }}
-          reviewers: ${{ github.actor }}
+          reviewers: ${{ github.event.pull_request.user.login }}
 
       - name: Normalise DESCRIPTION
         run: desc::desc_normalize()
@@ -102,15 +106,20 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
         with:
           commit_message: "Document package (GHA)"
+        continue-on-error: true
 
       - name: Create Pull Request
-        if: steps.commit_step_document.outcome == 'failure'
+        if: ${{ failure() && steps.commit_step_document.outputs.changes_detected == 'true' }}
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           commit-message: "Document package (GHA)"
-          branch: auto-style-code
+          # Use a different branch name than the style PR
+          branch: auto-style-code-document 
           delete-branch: true
           title: "Document package (GHA)"
           labels: maintenance
+          body: |
+            This Pull Request was automatically created to apply documentation changes to your code.
+            Please review and merge this PR.
           assignees: ${{ github.actor }}
-          reviewers: ${{ github.actor }}
+          reviewers: ${{ github.event.pull_request.user.login }}
