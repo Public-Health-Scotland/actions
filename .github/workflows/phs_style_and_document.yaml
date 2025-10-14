@@ -91,7 +91,7 @@ jobs:
             This Pull Request was automatically created to apply styling changes to your code.
             Please review and merge this PR.
           assignees: ${{ github.actor }}
-          reviewers: ${{ github.event.pull_request.user.login }}
+          reviewers: ${{ github.actor }}
 
       - name: Normalise DESCRIPTION
         run: desc::desc_normalize()
@@ -122,4 +122,4 @@ jobs:
             This Pull Request was automatically created to apply documentation changes to your code.
             Please review and merge this PR.
           assignees: ${{ github.actor }}
-          reviewers: ${{ github.event.pull_request.user.login }}
+          reviewers: ${{ github.actor }}
