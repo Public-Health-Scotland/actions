@@ -115,7 +115,7 @@ jobs:
         with:
           commit-message: "Document package (GHA)"
           # Use a different branch name than the style PR
-          branch: auto-style-code-document 
+          branch: auto-document-code
           delete-branch: true
           title: "Document package (GHA)"
           labels: maintenance
