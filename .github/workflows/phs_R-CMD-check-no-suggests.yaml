@@ -3,7 +3,7 @@
 on:
   workflow_call:
 
-name: .yaml
+name: R-CMD-check-no-suggests.yaml
 
 permissions:
   contents: read
