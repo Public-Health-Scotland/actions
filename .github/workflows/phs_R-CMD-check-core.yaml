@@ -18,8 +18,9 @@ jobs:
         config:
           # Core environments - always run these, even on draft PRs
           - {os: ubuntu-latest, r: 'release'}
-          - {os: windows-latest, r: '4.4.1'}
-          - {os: ubuntu-latest, r: '4.4.2'}
+          - {os: windows-latest, r: '4.4.1'} # RStudio Desktop
+          - {os: ubuntu-latest, r: '4.4.2'} # Posit Workbench
+          - {os: ubuntu-latest, r: '4.5.1'} # Posit Workbench
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
