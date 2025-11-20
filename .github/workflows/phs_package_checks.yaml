@@ -54,17 +54,8 @@ jobs:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'phs-core-check-queue' }}
       cancel-in-progress: false
   R-CMD-check-extended:
-    needs: [Style_and_document]
-    uses: ./.github/workflows/phs_R-CMD-check-extended.yaml
-    permissions:
-      contents: read
-    secrets: inherit
-    concurrency:
-      group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
-      cancel-in-progress: false
-  R-CMD-check-no-suggests:
     needs: [R-CMD-check-core]
-    uses: ./.github/workflows/phs_R-CMD-check-no-suggests.yaml
+    uses: ./.github/workflows/phs_R-CMD-check-extended.yaml
     permissions:
       contents: read
     secrets: inherit
