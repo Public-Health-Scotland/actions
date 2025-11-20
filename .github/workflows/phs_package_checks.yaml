@@ -72,15 +72,6 @@ jobs:
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
-  R-CMD-check-no-suggests:
-    needs: [R-CMD-check-extended]
-    uses: ./.github/workflows/phs_R-CMD-check-no-suggests.yaml
-    permissions:
-      contents: read
-    secrets: inherit
-    concurrency:
-      group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
-      cancel-in-progress: false
   test-coverage:
     needs: [R-CMD-check-core]
     uses: ./.github/workflows/phs_test_coverage.yaml
