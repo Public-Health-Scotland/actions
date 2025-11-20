@@ -1,0 +1,72 @@
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  workflow_call:
+
+name: phs_document.yaml
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  phs_document:
+    name: "Automatically re-build the package documentation"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@bd49c52ffe281809afa6f0fecbf37483c5dd0b93 # v2.11.3
+        with:
+          use-public-rspm: true
+
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@bd49c52ffe281809afa6f0fecbf37483c5dd0b93 # v2.11.3
+        with:
+          extra-packages: |
+            any::roxygen2
+            any::desc
+          needs: |
+            website
+            coverage
+
+      - name: Normalise DESCRIPTION
+        run: desc::desc_normalize()
+        shell: Rscript {0}
+
+      - name: Document
+        run: roxygen2::roxygenise()
+        shell: Rscript {0}
+
+      - name: Commit and push changes
+        id: commit_step_document
+        uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
+        with:
+          commit_message: "Document package (GHA)"
+        continue-on-error: true
+
+      - name: Create Pull Request
+        if: ${{ steps.commit_step_document.outputs.changes_detected == 'true' && steps.commit_step_document.outcome == 'failure' }}
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          commit-message: "Document package (GHA)"
+          branch: auto-document-code
+          delete-branch: true
+          title: "Document package (GHA)"
+          labels: maintenance
+          base: ${{ github.event.pull_request.base.ref }}
+          body: |
+            This Pull Request was automatically created to apply documentation changes to your code.
+            Please review and merge this PR.
+          assignees: ${{ github.actor }}
+          reviewers: ${{ github.actor }}
