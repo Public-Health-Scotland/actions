@@ -13,22 +13,22 @@ jobs:
   phs_style_and_document:
     name: "Automatically style and document the code"
     runs-on: ubuntu-latest
+    container:
+      image: rocker/r-ver
+      
     permissions:
       contents: write
       pull-requests: write
+      
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      
     steps:
       - name: Checkout repo
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Setup R
-        uses: r-lib/actions/setup-r@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2.11.4
-        with:
-          use-public-rspm: true
 
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2.11.4
