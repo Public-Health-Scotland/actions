@@ -1,5 +1,3 @@
-# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
-# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   workflow_call:
 
@@ -9,18 +7,29 @@ permissions:
   contents: read
 
 jobs:
-  R-CMD-check-core:
-    runs-on: ${{ matrix.config.os }}
-    name: Core R-CMD-check – ${{ matrix.config.os }} (${{ matrix.config.r }})
+  R-CMD-check-linux:
+    name: Core R-CMD-check – ubuntu-latest (${{ matrix.r }})
+    runs-on: ubuntu-latest
+    # Run the job inside a Rocker image
+    container:
+      image: >-
+        ${{ format(
+              'rocker/r-ver:{0}',
+              (
+                matrix.r == 'release' && 'latest' ||
+                matrix.r
+              )
+            ) }}
+            
     strategy:
       fail-fast: false
       matrix:
-        config:
-          # Core environments - always run these, even on draft PRs
-          - {os: ubuntu-latest, r: 'release'}
-          - {os: windows-latest, r: '4.4.1'} # RStudio Desktop
-          - {os: ubuntu-latest, r: '4.4.2'} # Posit Workbench
-          - {os: ubuntu-latest, r: '4.5.1'} # Posit Workbench
+        # Just add versions here; mapping happens above
+        r:
+          - release   # current CRAN release
+          - '4.4.2'   # Posit Workbench baseline
+          - '4.5.1'   # Posit Workbench baseline
+          
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
@@ -28,9 +37,27 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - uses: r-lib/actions/setup-pandoc@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2.11.4
+      - uses: r-lib/actions/setup-r-dependencies@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2.11.4
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+
+  R-CMD-check-windows:
+    name: Core R-CMD-check – windows-latest (4.4.1)
+    runs-on: windows-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: r-lib/actions/setup-pandoc@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2.11.4
       - uses: r-lib/actions/setup-r@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2.11.4
         with:
-          r-version: ${{ matrix.config.r }}
+          r-version: '4.4.1' # PHS RStudio Desktop verison
           use-public-rspm: true
       - uses: r-lib/actions/setup-r-dependencies@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2.11.4
         with:
