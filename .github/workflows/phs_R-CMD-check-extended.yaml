@@ -18,9 +18,10 @@ jobs:
       matrix:
         config:
           # Extended environments - only run if not a draft PR
+          - {os: windows-latest, r: '4.1.1'} # PHS RStudio Desktop install
           - {os: windows-latest, r: 'release'}
-          - {os: macos-latest, r: 'release'}
           - {os: windows-latest, r: 'devel', http-user-agent: 'release'}
+          - {os: macos-latest, r: 'release'}
           - {os: ubuntu-latest, r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-latest, r: 'oldrel-1'}
           - {os: ubuntu-latest, r: 'oldrel-2'}

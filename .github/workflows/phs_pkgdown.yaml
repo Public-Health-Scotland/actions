@@ -5,31 +5,37 @@ on:
 
 name: pkgdown.yaml
 
-permissions: 
+permissions:
   contents: read
 
 jobs:
   pkgdown:
     name: "Build and deploy the pkgdown site"
     runs-on: ubuntu-latest
+    container:
+      image: rocker/r-ver
+
     # Only restrict concurrency for non-PR jobs
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
     permissions:
       contents: write
+
     steps:
+      - name: Install git in container
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git
+    
       - name: Checkout repo
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Setup Pandoc
         uses: r-lib/actions/setup-pandoc@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2.11.4
-
-      - name: Setup R
-        uses: r-lib/actions/setup-r@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2.11.4
-        with:
-          use-public-rspm: true
 
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2.11.4
