@@ -81,7 +81,7 @@ jobs:
 
       - name: Commit and push changes
         id: commit_step_style
-        uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
         with:
           commit_message: "Style code (GHA)"
         continue-on-error: true
@@ -112,7 +112,7 @@ jobs:
 
       - name: Commit and push changes
         id: commit_step_document
-        uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
         with:
           commit_message: "Document package (GHA)"
         continue-on-error: true
