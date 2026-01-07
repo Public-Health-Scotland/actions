@@ -40,7 +40,77 @@ jobs:
           fi
           
       - name: Format using air
-        run: air format . 
+        run: air format .
+
+      - name: Detect changed .Rmd files
+        id: changed_rmd
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+          fi
+          # Handle first-push edge case: all-zero before SHA
+          if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            CHANGED_RMD="$(git ls-files | grep -E '\.Rmd$' || true)"
+          else
+            CHANGED_RMD="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E '\.Rmd$' || true)"
+          fi
+          if [ -n "$CHANGED_RMD" ]; then
+            echo "rmd_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "rmd_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup R
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install styler deps (cached)
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::styler
+            any::roxygen2
+            any::knitr
+
+      - name: Enable styler cache
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        run: styler::cache_activate()
+        shell: Rscript {0}
+
+      - name: Determine styler cache location
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        id: styler-location
+        run: |
+          cat(
+            "location=",
+            styler::cache_info(format = "tabular")$location,
+            "\n",
+            file = Sys.getenv("GITHUB_OUTPUT"),
+            append = TRUE,
+            sep = ""
+          )
+        shell: Rscript {0}
+
+      - name: Cache styler results
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.styler-location.outputs.location }}
+          key: ${{ runner.os }}-styler-${{ hashFiles('**/*.Rmd', '**/*.rmarkdown') }}
+          restore-keys: |
+            ${{ runner.os }}-styler-
+
+      - name: Style .Rmd using styler
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        run: Rscript -e 'styler::style_dir(".", filetype = c("rmd", "rmarkdown"))'
 
       - name: Commit and push changes
         id: commit_step_style
