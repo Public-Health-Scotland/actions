@@ -13,16 +13,11 @@ jobs:
     name: "Report on test coverage"
     runs-on: ubuntu-latest
     container:
-      image: rocker/r-ver
+      image: Public-Health-Scotland/actions/phs-r-image
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
-    steps:
-      - name: Install required system packages
-        run: |
-          apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git curl gpg
-    
+    steps:    
       - name: Checkout repo 
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
