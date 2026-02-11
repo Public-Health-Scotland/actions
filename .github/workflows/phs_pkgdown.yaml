@@ -13,7 +13,7 @@ jobs:
     name: "Build and deploy the pkgdown site"
     runs-on: ubuntu-latest
     container:
-      image: rocker/r-ver
+      image: Public-Health-Scotland/actions/phs-r-image
 
     # Only restrict concurrency for non-PR jobs
     concurrency:
@@ -25,12 +25,7 @@ jobs:
     permissions:
       contents: write
 
-    steps:
-      - name: Install git
-        run: |
-          apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git
-   
+    steps: 
       - name: Checkout repo
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
@@ -46,9 +41,6 @@ jobs:
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
-
-      - name: Install rsync
-        run: apt-get install -y rsync
 
       - name: Deploy to GitHub pages 🚀
         if: github.event_name != 'pull_request'
