@@ -1,0 +1,137 @@
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  workflow_call:
+
+name: phs_style.yaml
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  phs_style:
+    name: "Automatically style the code using air"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      
+      - name: Install posit-dev/air
+        uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237 # v1.0.0
+
+      - name: Include standard air.toml (overwrite existing)
+        run: |
+          echo '[format]' > air.toml
+          echo 'line-ending = "lf"' >> air.toml
+
+      - name: Add air.toml to .Rbuildignore if it exists
+        run: |
+          if [ -f .Rbuildignore ]; then
+            grep -qxF 'air.toml' .Rbuildignore || echo 'air.toml' >> .Rbuildignore
+          fi
+          
+      - name: Format using air
+        run: air format .
+
+      - name: Detect changed .Rmd files
+        id: changed_rmd
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+          fi
+          # Handle first-push edge case: all-zero before SHA
+          if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            CHANGED_RMD="$(git ls-files | grep -E '\.Rmd$' || true)"
+          else
+            CHANGED_RMD="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E '\.Rmd$' || true)"
+          fi
+          if [ -n "$CHANGED_RMD" ]; then
+            echo "rmd_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "rmd_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup R
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install styler deps (cached)
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::styler
+            any::roxygen2
+            any::knitr
+
+      - name: Enable styler cache
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        run: styler::cache_activate()
+        shell: Rscript {0}
+
+      - name: Determine styler cache location
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        id: styler-location
+        run: |
+          cat(
+            "location=",
+            styler::cache_info(format = "tabular")$location,
+            "\n",
+            file = Sys.getenv("GITHUB_OUTPUT"),
+            append = TRUE,
+            sep = ""
+          )
+        shell: Rscript {0}
+
+      - name: Cache styler results
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.styler-location.outputs.location }}
+          key: ${{ runner.os }}-styler-${{ hashFiles('**/*.Rmd', '**/*.rmarkdown') }}
+          restore-keys: |
+            ${{ runner.os }}-styler-
+
+      - name: Style .Rmd using styler
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        run: Rscript -e 'styler::style_dir(".", filetype = c("rmd", "rmarkdown"))'
+
+      - name: Commit and push changes
+        id: commit_step_style
+        uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5.2.0
+        with:
+          commit_message: "Style code (GHA)"
+        continue-on-error: true
+
+      - name: Create Pull Request
+        if: ${{ steps.commit_step_style.outputs.changes_detected == 'true' && steps.commit_step_style.outcome == 'failure' }}
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          commit-message: "Style code (GHA)"
+          branch: auto-style-code
+          delete-branch: true
+          title: "Style code (GHA)"
+          labels: maintenance
+          base: ${{ github.event.pull_request.base.ref }} 
+          body: |
+            This Pull Request was automatically created to apply styling changes to your code.
+            Please review and merge this PR.
+          assignees: ${{ github.actor }}
+          reviewers: ${{ github.actor }}
+
