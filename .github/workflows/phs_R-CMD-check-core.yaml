@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     # Run the job inside a Rocker image
     container:
-      image: ${{ (matrix.r == 'release' && 'rocker/r-ver:latest') || (matrix.r == 'devel' && 'rocker/r-ver:devel') || format('rocker/r-ver:{0}', matrix.r) }}
+      image: ${{ (matrix.r == 'release' && 'phs-r-image') || (matrix.r == 'devel' && 'rocker/r-ver:devel') || format('rocker/r-ver:{0}', matrix.r) }}
             
     strategy:
       fail-fast: false
