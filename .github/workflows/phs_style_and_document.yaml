@@ -14,7 +14,7 @@ jobs:
     name: "Automatically style and document the code"
     runs-on: ubuntu-latest
     container:
-      image: rocker/r-ver
+      image: Public-Health-Scotland/actions/phs-r-image
       
     permissions:
       contents: write
@@ -23,12 +23,7 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       
-    steps:
-      - name: Install git
-        run: |
-          apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git
-      
+    steps:     
       - name: Mark workspace as safe for Git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
@@ -37,17 +32,6 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
-
-      - name: Install dependencies
-        uses: r-lib/actions/setup-r-dependencies@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2.11.4
-        with:
-          extra-packages: |
-            any::styler
-            any::roxygen2
-            any::desc
-          needs: |
-            website
-            coverage
 
       - name: Enable styler cache
         run: styler::cache_activate()
