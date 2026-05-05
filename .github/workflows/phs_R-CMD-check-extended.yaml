@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   R-CMD-check-extended:
-    if: ${{ !github.event.pull_request.draft }}
     runs-on: ${{ matrix.config.os }}
     name: Extended R-CMD-check – ${{ matrix.config.os }} (${{ matrix.config.r }})
     strategy:
