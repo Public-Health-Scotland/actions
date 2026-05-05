@@ -54,7 +54,7 @@ jobs:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'phs-core-check-queue' }}
       cancel-in-progress: false
   R-CMD-check-extended:
-    needs: [R-CMD-check-core]
+    needs: [Style_and_document]
     if: ${{ !github.event.pull_request.draft }}
     uses: ./.github/workflows/phs_R-CMD-check-extended.yaml
     permissions:
@@ -85,7 +85,12 @@ jobs:
     secrets: inherit
 # Final job to update status
   finalize:
-    needs: [Style_and_document, R-CMD-check-core, test-coverage, pkgdown]
+    needs:
+      - Style_and_document
+      - R-CMD-check-core
+      - R-CMD-check-extended
+      - test-coverage
+      - pkgdown
     runs-on: ubuntu-latest
     if: always()
     permissions:
