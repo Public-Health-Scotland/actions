@@ -15,7 +15,7 @@ permissions:
   contents: read
   pull-requests: read
   statuses: read
-  
+
 jobs:
   # Initial job to post status
   init:
@@ -35,8 +35,18 @@ jobs:
               description: 'Package checks in progress',
               context: 'PHS Package Checks'
             });
-  Style_and_document:
-    uses: ./.github/workflows/phs_style_and_document.yaml
+  Style:
+    uses: ./.github/workflows/phs_style.yaml
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets: inherit
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+  Document:
+    needs: [Style]
+    uses: ./.github/workflows/phs_document.yaml
     permissions:
       contents: write
       pull-requests: write
@@ -45,7 +55,7 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
   Build_README:
-    needs: [Style_and_document]
+    needs: [Style]
     uses: ./.github/workflows/phs_build_readme.yaml
     permissions:
       contents: write
@@ -55,7 +65,7 @@ jobs:
       group: ${{ github.workflow }}-build-readme-${{ github.ref }}
       cancel-in-progress: true
   R-CMD-check-core:
-    needs: [Style_and_document]
+    needs: [Style, Document]
     uses: ./.github/workflows/phs_R-CMD-check-core.yaml
     permissions:
       contents: read
@@ -64,7 +74,7 @@ jobs:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'phs-core-check-queue' }}
       cancel-in-progress: false
   R-CMD-check-extended:
-    needs: [Style_and_document]
+    needs: [Style, Document]
     if: ${{ !github.event.pull_request.draft }}
     uses: ./.github/workflows/phs_R-CMD-check-extended.yaml
     permissions:
@@ -84,7 +94,8 @@ jobs:
       cancel-in-progress: false
   pkgdown:
     needs:
-      - Style_and_document
+      - Style
+      - Document
       - Build_README
       - R-CMD-check-core
       - R-CMD-check-extended
@@ -94,10 +105,12 @@ jobs:
     permissions:
       contents: write
     secrets: inherit
+  
 # Final job to update status
   finalize:
     needs:
-      - Style_and_document
+      - Style
+      - Document
       - Build_README
       - R-CMD-check-core
       - R-CMD-check-extended
@@ -112,7 +125,8 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const allSuccess = ${{ needs.Style_and_document.result == 'success' && 
+            const allSuccess = ${{ needs.Style.result == 'success' &&
+                                    needs.Document.result == 'success' && 
                                    needs.Build_README.result == 'success' &&
                                     needs.R-CMD-check-core.result == 'success' && 
                                     (needs.R-CMD-check-extended.result == 'success' || needs.R-CMD-check-extended.result == 'skipped') &&
