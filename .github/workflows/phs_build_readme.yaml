@@ -1,0 +1,122 @@
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  workflow_call:
+
+name: phs_build_readme.yaml
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  phs_build_readme:
+    name: "Build README"
+    runs-on: ubuntu-latest
+    container:
+      image: rocker/r-ver
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Install git
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git
+
+      - name: Mark workspace as safe for Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Checkout repo
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
+      
+      - name: Determine whether README needs rebuilding
+        id: readme-check
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -f "README.Rmd" ]; then
+            readme_source="README.Rmd"
+          elif [ -f "README.rmd" ]; then
+            readme_source="README.rmd"
+          else
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Always rebuild on push / workflow_dispatch / anything that is not a PR.
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # On PRs, rebuild if README.md is missing.
+          if [ ! -f "README.md" ]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # On PRs, rebuild only if the README source changed.
+          base_ref="${{ github.event.pull_request.base.ref }}"
+          git fetch origin "$base_ref" --depth=1
+
+          changed_files="$(git diff --name-only "origin/$base_ref"...HEAD)"
+
+          if echo "$changed_files" | grep -Fxq "$readme_source"; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+
+      - name: Setup Pandoc
+        if: ${{ steps.readme-check.outputs.build == 'true' }}
+        uses: r-lib/actions/setup-pandoc@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
+
+      - name: Install dependencies
+        if: ${{ steps.readme-check.outputs.build == 'true' }}
+        uses: r-lib/actions/setup-r-dependencies@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
+        with:
+          extra-packages: |
+            any::devtools
+          needs: website
+
+      - name: Build README
+        if: ${{ steps.readme-check.outputs.build == 'true' }}
+        run: devtools::build_readme()
+        shell: Rscript {0}
+
+      - name: Commit and push changes
+        if: ${{ steps.readme-check.outputs.build == 'true' }}
+        id: commit_step_readme
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
+        with:
+          commit_message: "Build README (GHA)"
+          commit_user_name: ${{ github.actor }}
+          commit_user_email: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
+        continue-on-error: true
+
+      - name: Create Pull Request
+        if: ${{ steps.readme-check.outputs.build == 'true' && steps.commit_step_readme.outputs.changes_detected == 'true' && steps.commit_step_readme.outcome == 'failure' }}
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          commit-message: "Build README (GHA)"
+          branch: auto-build-readme
+          delete-branch: true
+          title: "Build README (GHA)"
+          labels: maintenance
+          base: ${{ github.event.pull_request.base.ref }}
+          body: |
+            This Pull Request was automatically created to rebuild README.md from README.Rmd.
+            Please review and merge this PR.
+          assignees: ${{ github.actor }}
+          reviewers: ${{ github.actor }}

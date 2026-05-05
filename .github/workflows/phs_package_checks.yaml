@@ -44,6 +44,16 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
+  Build_README:
+    needs: [Style_and_document]
+    uses: ./.github/workflows/phs_build_readme.yaml
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets: inherit
+    concurrency:
+      group: ${{ github.workflow }}-build-readme-${{ github.ref }}
+      cancel-in-progress: true
   R-CMD-check-core:
     needs: [Style_and_document]
     uses: ./.github/workflows/phs_R-CMD-check-core.yaml
@@ -75,6 +85,7 @@ jobs:
   pkgdown:
     needs:
       - Style_and_document
+      - Build_README
       - R-CMD-check-core
       - R-CMD-check-extended
       - test-coverage
@@ -87,6 +98,7 @@ jobs:
   finalize:
     needs:
       - Style_and_document
+      - Build_README
       - R-CMD-check-core
       - R-CMD-check-extended
       - test-coverage
@@ -101,6 +113,7 @@ jobs:
         with:
           script: |
             const allSuccess = ${{ needs.Style_and_document.result == 'success' && 
+                                   needs.Build_README.result == 'success' &&
                                     needs.R-CMD-check-core.result == 'success' && 
                                     (needs.R-CMD-check-extended.result == 'success' || needs.R-CMD-check-extended.result == 'skipped') &&
                                     needs.test-coverage.result == 'success' && 
