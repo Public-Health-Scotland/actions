@@ -53,11 +53,19 @@ jobs:
             exit 0
           fi
 
+          # Always rebuild on push / workflow_dispatch / anything that is not a PR.
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Rebuild if README.md is missing.
           if [ ! -f "README.md" ]; then
             echo "build=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
+          # Rebuild if README.Rmd / README.rmd changed.
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             base_ref="${{ github.event.pull_request.base.ref }}"
             git fetch origin "$base_ref" --depth=1
