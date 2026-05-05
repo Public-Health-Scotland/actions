@@ -37,23 +37,51 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
-
-      - name: Check for README source
-        id: readme-source
-        run: |
-          if [ -f "README.Rmd" ] || [ -f "README.rmd" ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
+      
+      - name: Determine whether README needs rebuilding
+        id: readme-check
         shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -f "README.Rmd" ]; then
+            readme_source="README.Rmd"
+          elif [ -f "README.rmd" ]; then
+            readme_source="README.rmd"
+          else
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ ! -f "README.md" ]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base_ref="${{ github.event.pull_request.base.ref }}"
+            git fetch origin "$base_ref" --depth=1
+            changed_files="$(git diff --name-only "origin/$base_ref"...HEAD)"
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            git fetch origin "${{ github.event.before }}" --depth=1 || true
+            changed_files="$(git diff --name-only "${{ github.event.before }}" HEAD || true)"
+          else
+            changed_files="$(git diff --name-only HEAD~1 HEAD || true)"
+          fi
+
+          if echo "$changed_files" | grep -Eiq '^README\.rmd$'; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          fi
+
 
       - name: Setup Pandoc
-        if: ${{ steps.readme-source.outputs.exists == 'true' }}
+        if: ${{ steps.readme-check.outputs.build == 'true' }}
         uses: r-lib/actions/setup-pandoc@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
 
       - name: Install dependencies
-        if: ${{ steps.readme-source.outputs.exists == 'true' }}
+        if: ${{ steps.readme-check.outputs.build == 'true' }}
         uses: r-lib/actions/setup-r-dependencies@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
         with:
           extra-packages: |
@@ -61,12 +89,12 @@ jobs:
           needs: website
 
       - name: Build README
-        if: ${{ steps.readme-source.outputs.exists == 'true' }}
+        if: ${{ steps.readme-check.outputs.build == 'true' }}
         run: devtools::build_readme()
         shell: Rscript {0}
 
       - name: Commit and push changes
-        if: ${{ steps.readme-source.outputs.exists == 'true' }}
+        if: ${{ steps.readme-check.outputs.build == 'true' }}
         id: commit_step_readme
         uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
         with:
@@ -76,7 +104,7 @@ jobs:
         continue-on-error: true
 
       - name: Create Pull Request
-        if: ${{ steps.readme-source.outputs.exists == 'true' && steps.commit_step_readme.outputs.changes_detected == 'true' && steps.commit_step_readme.outcome == 'failure' }}
+        if: ${{ steps.readme-check.outputs.build == 'true' && steps.commit_step_readme.outputs.changes_detected == 'true' && steps.commit_step_readme.outcome == 'failure' }}
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           commit-message: "Build README (GHA)"
