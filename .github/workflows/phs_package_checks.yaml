@@ -73,6 +73,7 @@ jobs:
       cancel-in-progress: false
   pkgdown:
     needs: [Style_and_document]
+    if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref_name == 'main' || github.ref_name == 'master') }}
     uses: ./.github/workflows/phs_pkgdown.yaml
     permissions:
       contents: write
@@ -92,7 +93,8 @@ jobs:
             const allSuccess = ${{ needs.Style_and_document.result == 'success' && 
                                     needs.R-CMD-check-core.result == 'success' && 
                                     needs.test-coverage.result == 'success' && 
-                                    needs.pkgdown.result == 'success' }};
+                                    (needs.pkgdown.result == 'success' || needs.pkgdown.result == 'skipped')
+                                    }};
             
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
