@@ -18,6 +18,10 @@ permissions:
   contents: read
   pull-requests: read
   statuses: read
+
+concurrency:
+  group: ${{ format('phs-package-checks-{0}-{1}', github.repository, github.event.pull_request.number || github.ref) }}
+  cancel-in-progress: true
   
 jobs:
   # Initial job to post status
