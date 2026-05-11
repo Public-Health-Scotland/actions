@@ -8,6 +8,9 @@ on:
         type: boolean
         default: false
         description: "Limit concurrent jobs in general and specifically limit R-CMD-check to 3 in parallel (default: false)"
+    secrets:
+      PHS_ACTIONS_TOKEN:
+        required: false
 
 name: phs_package_checks.yaml
 
