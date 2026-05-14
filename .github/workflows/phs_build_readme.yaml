@@ -2,6 +2,9 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   workflow_call:
+    secrets:
+      PHS_ACTIONS_TOKEN:
+        required: false
 
 name: phs_build_readme.yaml
 
@@ -21,7 +24,7 @@ jobs:
       pull-requests: write
 
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_PAT: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
 
     steps:
       - name: Install git
@@ -37,6 +40,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
+          token: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
       
       - name: Determine whether README needs rebuilding
         id: readme-check
@@ -109,6 +113,7 @@ jobs:
         if: ${{ steps.readme-check.outputs.build == 'true' && steps.commit_step_readme.outputs.changes_detected == 'true' && steps.commit_step_readme.outcome == 'failure' }}
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
+          token: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
           commit-message: "Build README (GHA)"
           branch: auto-build-readme
           delete-branch: true
