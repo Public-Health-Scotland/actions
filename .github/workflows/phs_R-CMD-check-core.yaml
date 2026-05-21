@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     # Run the job inside a Rocker image
     container:
-      image: ${{ (matrix.r == 'release' && 'rocker/r-ver:latest') || (matrix.r == 'devel' && 'rocker/r-ver:devel') || format('rocker/r-ver:{0}', matrix.r) }}
+      image: ${{ (matrix.r == 'release' && 'rocker/verse:latest') || (matrix.r == 'devel' && 'rocker/verse:devel') || format('rocker/verse:{0}', matrix.r) }}
             
     strategy:
       fail-fast: false
@@ -31,7 +31,7 @@ jobs:
       - name: Install git and qpdf
         run: |
           apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git qpdf
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git gh qpdf
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: r-lib/actions/setup-pandoc@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
       - uses: r-lib/actions/setup-r-dependencies@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
