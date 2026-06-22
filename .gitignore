@@ -1,0 +1,43 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# R / RStudio
+.Rhistory
+.RData
+.Ruserdata
+.Renviron
+.Rprofile
+.Rproj.user/
+*.Rproj
+
+# Build/check artefacts
+.Rcheck/
+*.tar.gz
+*.Rout
+coverage/
+cobertura.xml
+results.sarif
+
+# Temporary files
+*.log
+*.tmp
+tmp/
+temp/
