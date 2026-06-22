@@ -10,9 +10,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    groups:
-      patch:
-        patterns:
-          - "*"
-        update-types:
-          - "patch"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+       
