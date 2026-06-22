@@ -10,9 +10,15 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    groups:
-      patch:
-        patterns:
-          - "*"
-        update-types:
-          - "patch"
+    cooldown:
+      default-days: 7
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+       
