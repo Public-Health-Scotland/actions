@@ -23,6 +23,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      packages: read
 
     env:
       GITHUB_PAT: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
