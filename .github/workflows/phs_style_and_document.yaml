@@ -17,7 +17,7 @@ jobs:
     name: "Automatically style and document the code"
     runs-on: ubuntu-latest
     container:
-      image: rocker/r-ver
+      image: ghcr.io/public-health-scotland/actions/phs-r-image
       
     permissions:
       contents: write
@@ -31,11 +31,6 @@ jobs:
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
-
-      - name: Install git
-        run: |
-          apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git
       
       - name: Mark workspace as safe for Git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -46,14 +41,6 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
           token: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
-
-      - name: Install dependencies
-        uses: r-lib/actions/setup-r-dependencies@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
-        with:
-          extra-packages: |
-            any::styler
-            any::roxygen2
-            any::desc
 
       - name: Enable styler cache
         run: styler::cache_activate()
@@ -114,7 +101,10 @@ jobs:
         run: desc::desc_normalize()
         shell: Rscript {0}
 
-      - name: Document
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
+
+      - name: Document package
         run: roxygen2::roxygenise()
         shell: Rscript {0}
 

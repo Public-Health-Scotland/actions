@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     # Run the job inside a Rocker image
     container:
-      image: ${{ (matrix.r == 'release' && 'rocker/r-ver:latest') || (matrix.r == 'devel' && 'rocker/r-ver:devel') || format('rocker/r-ver:{0}', matrix.r) }}
+      image: ${{ (matrix.r == 'release' && 'ghcr.io/public-health-scotland/actions/phs-r-image') || (matrix.r == 'devel' && 'rocker/r-ver:devel') || format('rocker/r-ver:{0}', matrix.r) }}
             
     strategy:
       fail-fast: false
@@ -34,12 +34,17 @@ jobs:
           egress-policy: audit
 
       - name: Install git and qpdf
+        if: matrix.r != 'release'
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git qpdf
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: r-lib/actions/setup-pandoc@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
-      - uses: r-lib/actions/setup-r-dependencies@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Set up Pandoc
+        uses: r-lib/actions/setup-pandoc@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
+        if: matrix.r != 'release'
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
         with:
           extra-packages: any::rcmdcheck
           needs: check

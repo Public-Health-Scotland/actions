@@ -17,7 +17,7 @@ jobs:
     name: "Build README"
     runs-on: ubuntu-latest
     container:
-      image: rocker/r-ver
+      image: ghcr.io/public-health-scotland/actions/phs-r-image
 
     permissions:
       contents: write
@@ -31,11 +31,6 @@ jobs:
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
-
-      - name: Install git
-        run: |
-          apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git
 
       - name: Mark workspace as safe for Git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -86,10 +81,6 @@ jobs:
             echo "build=false" >> "$GITHUB_OUTPUT"
           fi
 
-
-      - name: Setup Pandoc
-        if: ${{ steps.readme-check.outputs.build == 'true' }}
-        uses: r-lib/actions/setup-pandoc@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
 
       - name: Install dependencies
         if: ${{ steps.readme-check.outputs.build == 'true' }}
