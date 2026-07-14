@@ -27,7 +27,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
 
     steps:
-      - name: Harden the runner (Audit all outbound calls)
+      - name: Harden runner
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
@@ -40,7 +40,7 @@ jobs:
       - name: Mark workspace as safe for Git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
@@ -114,7 +114,7 @@ jobs:
           commit_user_email: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
         continue-on-error: true
 
-      - name: Create Pull Request
+      - name: Create pull request
         if: ${{ steps.readme-check.outputs.build == 'true' && steps.commit_step_readme.outputs.changes_detected == 'true' && steps.commit_step_readme.outcome == 'failure' }}
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
