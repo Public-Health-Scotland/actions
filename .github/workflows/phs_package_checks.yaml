@@ -145,7 +145,7 @@ jobs:
       contents: write
       packages: read
     secrets: inherit
-  
+
 # Final job to update status
   finalize:
     needs:
