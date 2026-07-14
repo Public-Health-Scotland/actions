@@ -124,7 +124,7 @@ jobs:
       contents: write
       packages: read
     secrets: inherit
-  
+
 # Final job to update status
   finalize:
     needs:
@@ -150,7 +150,7 @@ jobs:
         with:
           script: |
             const allSuccess = ${{ needs.Style.result == 'success' &&
-                                    needs.Document.result == 'success' && 
+                                    needs.Document.result == 'success' &&
                                    needs.Build_README.result == 'success' &&
                                     needs.R-CMD-check-core.result == 'success' &&
                                     (needs.R-CMD-check-extended.result == 'success' || needs.R-CMD-check-extended.result == 'skipped') &&
