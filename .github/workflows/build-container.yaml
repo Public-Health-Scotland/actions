@@ -6,7 +6,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docker/**'
+      - "docker/**"
+      - ".github/workflows/build-container.yaml"
   workflow_dispatch:
 
 permissions:
@@ -27,9 +28,10 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Set lowercase image name
+        shell: bash
         run: |
-          IMAGE_NAME="ghcr.io/${{ github.repository_owner }}/phs-r-image"
-          echo "IMAGE_NAME=${IMAGE_NAME,,}" >> $GITHUB_ENV
+          printf 'IMAGE_NAME=ghcr.io/%s/phs-r-image\n' \
+            "${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
