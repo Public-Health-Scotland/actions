@@ -14,7 +14,7 @@ jobs:
     name: "Report on test coverage"
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/public-health-scotland/actions/phs-r-image
+      image: ghcr.io/public-health-scotland/phs-r-image
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 

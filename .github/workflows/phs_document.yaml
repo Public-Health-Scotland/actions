@@ -6,7 +6,7 @@ on:
       PHS_ACTIONS_TOKEN:
         required: false
 
-name: phs_style_and_document.yaml
+name: phs_document.yaml
 
 permissions:
   contents: read
@@ -14,8 +14,8 @@ permissions:
   packages: read
 
 jobs:
-  phs_style_and_document:
-    name: "Automatically style and document the code"
+  phs_document:
+    name: "Automatically re-build the package documentation"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/public-health-scotland/phs-r-image
@@ -23,7 +23,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      packages: read
 
     env:
       GITHUB_PAT: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
@@ -36,7 +35,6 @@ jobs:
 
       - name: Mark workspace as safe for Git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -44,67 +42,12 @@ jobs:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
           token: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
 
-      - name: Enable styler cache
-        run: styler::cache_activate()
-        shell: Rscript {0}
-
-      - name: Determine cache location
-        id: styler-location
-        run: |
-          cat(
-            "location=",
-            styler::cache_info(format = "tabular")$location,
-            "\n",
-            file = Sys.getenv("GITHUB_OUTPUT"),
-            append = TRUE,
-            sep = ""
-          )
-        shell: Rscript {0}
-
-      - name: Cache styler
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ steps.styler-location.outputs.location }}
-          key: ${{ runner.os }}-styler-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-styler-
-            ${{ runner.os }}-
-
-      - name: Style code
-        run: styler::style_pkg()
-        shell: Rscript {0}
-
-      - name: Commit and push changes
-        id: commit_step_style
-        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
-        with:
-          commit_message: "Style code (GHA)"
-          commit_user_name: ${{ github.actor }}
-          commit_user_email: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
-        continue-on-error: true
-
-      - name: Create Pull Request
-        if: ${{ steps.commit_step_style.outputs.changes_detected == 'true' && steps.commit_step_style.outcome == 'failure' }}
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
-        with:
-          commit-message: "Style code (GHA)"
-          branch: auto-style-code
-          delete-branch: true
-          title: "Style code (GHA)"
-          labels: maintenance
-          base: ${{ github.event.pull_request.base.ref }}
-          body: |
-            This Pull Request was automatically created to apply styling changes to your code.
-            Please review and merge this PR.
-          assignees: ${{ github.actor }}
-          reviewers: ${{ github.actor }}
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
 
       - name: Normalise DESCRIPTION
         run: desc::desc_normalize()
         shell: Rscript {0}
-
-      - name: Install dependencies
-        uses: r-lib/actions/setup-r-dependencies@a51a8012b0aab7c32ef9d19bf54da93f3254335e # v2.12.0
 
       - name: Document package
         run: roxygen2::roxygenise()

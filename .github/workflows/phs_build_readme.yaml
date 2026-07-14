@@ -18,7 +18,7 @@ jobs:
     name: "Build README"
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/public-health-scotland/actions/phs-r-image
+      image: ghcr.io/public-health-scotland/phs-r-image
 
     permissions:
       contents: write
