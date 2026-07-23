@@ -1,0 +1,76 @@
+name: phs_projects_check
+
+on:
+  workflow_call:
+    inputs:
+      changed_files_only_lint:
+        description: 'Only lint changed files in PRs'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ format('phs-project-checks-{0}-{1}', github.repository, github.event.pull_request.number || github.ref) }}
+  cancel-in-progress: true
+
+jobs:
+  syntax-validation:
+    name: Syntax Validation
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/public-health-scotland/phs-r-image
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Parse R and Quarto script syntax
+        run: |
+          scripts <- list.files(pattern = "\\.([Rr]|[Rr]md|[Qq]md)$", recursive = TRUE)
+          errors <- FALSE
+          for (s in scripts) {
+            tryCatch(
+              parse(file = s),
+              error = function(e) {
+                cat(sprintf("::error file=%s::Syntax parsing error: %s\n", s, e$message))
+                errors <<- TRUE
+              }
+            )
+          }
+          if (errors) stop("Syntax errors detected in project scripts.")
+        shell: Rscript {0}
+        
+  style:
+    name: Code Style
+    needs: syntax-validation
+    uses: ./.github/workflows/phs_style.yaml
+    permissions:
+      contents: write
+      pull-requests: write
+
+  lint:
+    name: Code Linting
+    needs: style
+    uses: ./.github/workflows/phs_lint.yaml
+    with:
+      changed_files_only: ${{ inputs.changed_files_only_lint }}
+
+  renv-lockfile-check:
+    name: renv lockfile check
+    needs: syntax-validation
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/public-health-scotland/phs-r-image
+    steps:
+      - name: Check renv lockfile status
+        run: |
+          if (file.exists("renv.lock")) {
+            status <- renv::status()
+            if (!renv::status()$synchronised) {
+              stop("renv.lock is out of sync with project dependencies. Run renv::status() locally.")
+            }
+          }
+        shell: Rscript {0}
