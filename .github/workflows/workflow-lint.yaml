@@ -26,6 +26,14 @@ jobs:
         uses: docker://rhysd/actionlint:latest@sha256:9d36088643581e728c969f35141f88139fec77280b2be23c1f66f8e40e1025e7
         with:
           args: -color
+  
+  run-mega-linter:
+    uses: ./.github/workflows/phs_lint.yaml
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
+    secrets: inherit
 
   validate-workflows:
     runs-on: ubuntu-latest
