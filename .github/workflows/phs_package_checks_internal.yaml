@@ -1,4 +1,4 @@
-name: phs_internal_package_checks
+name: phs_package_checks_internal.yaml
 
 on:
   workflow_call:
