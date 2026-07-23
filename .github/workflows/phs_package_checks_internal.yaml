@@ -46,7 +46,8 @@ jobs:
       contents: read
       packages: read
     with:
-      args: ${{ inputs.run_tests && 'c("--no-manual", "--no-vignettes")' || 'c("--no-manual", "--no-vignettes", "--no-tests")' }}
+      args: ${{ inputs.run_tests && 'c("--no-manual", "--as-cran")' || 'c("--no-manual", "--ignore-vignettes", "--no-tests")' }}
+      build_args: 'c("--no-manual", "--no-build-vignettes")'    
     secrets: inherit
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'phs-core-check-queue' }}
