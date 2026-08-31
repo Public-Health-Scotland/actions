@@ -8,6 +8,16 @@ on:
         type: boolean
         default: false
         description: "Limit concurrent jobs in general and specifically limit R-CMD-check to 3 in parallel (default: false)"
+      lint:
+        required: false
+        type: boolean
+        default: false
+        description: "Lint the package using mega-linter"
+      lint_changed_files_only:
+        required: false
+        type: boolean
+        default: true
+        description: "By default, only files changed in the PR will be linted; if you want to lint all files, set this to false"
     secrets:
       PHS_ACTIONS_TOKEN:
         required: false
@@ -100,6 +110,18 @@ jobs:
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('test-coverage-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
+  lint:
+    needs:
+      - Style_and_document
+      - Build_README
+    if: ${{ inputs.lint && github.event_name == 'pull_request' }}
+    uses: ./.github/workflows/phs_lint.yaml
+    with:
+      changed_files_only: ${{ inputs.lint_changed_files_only }}
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
   pkgdown:
     needs:
       - Style_and_document
@@ -113,7 +135,7 @@ jobs:
       contents: write
       packages: read
     secrets: inherit
-# Final job to update status
+  # Final job to update status
   finalize:
     needs:
       - Style_and_document
