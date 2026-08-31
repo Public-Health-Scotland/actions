@@ -42,7 +42,7 @@ jobs:
           APPLY_FIXES: all
           APPLY_FIXES_EVENT: pull_request
           APPLY_FIXES_MODE: commit
-          ENABLE: ACTION,BASH,MARKDOWN,PYTHON,YAML
+          ENABLE: ACTION,BASH,DOCKERFILE,JSON,MARKDOWN,PYTHON,YAML
           IGNORE_GITIGNORED_FILES: true
           IGNORE_GENERATED_FILES: true
           SHOW_ELAPSED_TIME: true
