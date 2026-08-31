@@ -1,0 +1,78 @@
+# Workflow derived from:
+# https://github.com/r-lib/actions/blob/v2-branch/examples/lint-changed-files.yaml
+
+name: phs_lint.yaml
+
+on:
+  workflow_call:
+    inputs:
+      changed_files_only:
+        description: "Only lint files changed in the pull request"
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  packages: read
+
+jobs:
+  lint:
+    name: Lint R code
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/public-health-scotland/phs-r-image
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      LINTR_ERROR_ON_LINT: true
+
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up R dependencies
+        uses: r-lib/actions/setup-r-dependencies@34a9ab2b644b593b6c385fe9523f3b293e9344f5 # v2.11.3
+        with:
+          extra-packages: |
+            any::gh
+            any::lintr
+            any::purrr
+            local::.
+          needs: check
+
+      - name: Lint package
+        shell: Rscript {0}
+        run: |
+          if (
+            isTRUE(${{ inputs.changed_files_only }}) &&
+            identical("${{ github.event_name }}", "pull_request")
+          ) {
+            files <- gh::gh(
+              "GET /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files",
+              .limit = Inf
+            )
+
+            changed_files <- purrr::map_chr(files, "filename")
+
+            package_files <- list.files(
+              recursive = TRUE,
+              all.files = TRUE,
+              no.. = TRUE
+            )
+
+            exclusions <- as.list(
+              setdiff(package_files, changed_files)
+            )
+
+            lintr::lint_package(exclusions = exclusions)
+          } else {
+            lintr::lint_package()
+          }
