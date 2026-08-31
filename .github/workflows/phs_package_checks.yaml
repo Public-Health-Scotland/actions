@@ -59,6 +59,7 @@ jobs:
               context: 'PHS Package Checks'
             });
   Style_and_document:
+    needs: [init]
     uses: ./.github/workflows/phs_style_and_document.yaml
     permissions:
       contents: write
@@ -111,9 +112,7 @@ jobs:
       group: ${{ inputs.limit_parallel == false && format('test-coverage-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
   lint:
-    needs:
-      - Style_and_document
-      - Build_README
+    needs: [Build_README]
     if: ${{ inputs.lint && github.event_name == 'pull_request' }}
     uses: ./.github/workflows/phs_lint.yaml
     with:
@@ -143,6 +142,7 @@ jobs:
       - R-CMD-check-core
       - R-CMD-check-extended
       - test-coverage
+      - lint
       - pkgdown
     runs-on: ubuntu-latest
     if: always()
@@ -159,12 +159,16 @@ jobs:
         with:
           script: |
             const allSuccess = ${{ needs.Style_and_document.result == 'success' &&
-                                   needs.Build_README.result == 'success' &&
-                                    needs.R-CMD-check-core.result == 'success' &&
-                                    (needs.R-CMD-check-extended.result == 'success' || needs.R-CMD-check-extended.result == 'skipped') &&
-                                    needs.test-coverage.result == 'success' &&
-                                    (needs.pkgdown.result == 'success' || needs.pkgdown.result == 'skipped')
-                                    }};
+                       needs.Build_README.result == 'success' &&
+                       needs.R-CMD-check-core.result == 'success' &&
+                       (needs.R-CMD-check-extended.result == 'success' ||
+                        needs.R-CMD-check-extended.result == 'skipped') &&
+                       needs.test-coverage.result == 'success' &&
+                       (needs.lint.result == 'success' ||
+                        needs.lint.result == 'skipped') &&
+                       (needs.pkgdown.result == 'success' ||
+                        needs.pkgdown.result == 'skipped')
+                    }};
 
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
