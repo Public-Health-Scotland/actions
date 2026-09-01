@@ -1,6 +1,5 @@
 import os
 import yaml
-import re
 import glob
 
 def validate_workflow_references():
