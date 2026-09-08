@@ -9,10 +9,9 @@ on:
   push:
     branches:
       - main
-  pull_request_target:
   pull_request:
   merge_group:
-  workflow_dispatch: 
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -23,7 +22,7 @@ jobs:
     name: MegaLinter
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       issues: write
       pull-requests: write
 
