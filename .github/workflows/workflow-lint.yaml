@@ -41,6 +41,8 @@ jobs:
         uses: oxsecurity/megalinter@15e5b45552097e318c93de385779ce3b1084052c # v10.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLY_FIXES_EVENT: pull_request
+          APPLY_FIXES_MODE: commit
           
   validate-workflows:
     runs-on: ubuntu-latest
