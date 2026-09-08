@@ -1,6 +1,6 @@
+import glob
 import os
 import yaml
-import glob
 
 def validate_workflow_references():
     """Validate that all workflow references exist and have valid syntax."""
