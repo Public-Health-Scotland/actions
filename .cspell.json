@@ -10,6 +10,5 @@
         "package-lock.json",
         "megalinter-reports"
     ],
-    "words": [
-    ]
+    "words": []
 }
