@@ -1,6 +1,5 @@
 import os
 import yaml
-import re
 import glob
 
 def validate_workflow_references():
@@ -24,7 +23,10 @@ def validate_workflow_references():
                             # Extract the referenced workflow
                             referenced_workflow = job['uses'].split('/')[-1]
                             if referenced_workflow not in workflow_names:
-                                errors.append(f"In {workflow_file}, job {job_id} references non-existent workflow {referenced_workflow}")
+                                errors.append(
+                                    f"In {workflow_file}, job {job_id} references "
+                                    f"non-existent workflow {referenced_workflow}"
+                                 )
             except yaml.YAMLError as e:
                 errors.append(f"Error parsing {workflow_file}: {e}")
     

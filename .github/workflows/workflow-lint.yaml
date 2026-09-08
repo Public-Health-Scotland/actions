@@ -1,5 +1,7 @@
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
 
 name: Lint and validate workflows
 
@@ -8,6 +10,7 @@ on:
     branches:
       - main
   pull_request_target:
+  pull_request:
   merge_group:
   workflow_dispatch: 
 
@@ -21,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      issues: write
+      pull-requests: write
 
     steps:
       - name: Harden runner
@@ -41,7 +46,7 @@ jobs:
           APPLY_FIXES: all
           APPLY_FIXES_EVENT: pull_request
           APPLY_FIXES_MODE: commit
-          ENABLE: ACTION,BASH,MARKDOWN,PYTHON,YAML
+          ENABLE: ACTION,BASH,DOCKERFILE,JSON,MARKDOWN,PYTHON,YAML
           IGNORE_GITIGNORED_FILES: true
           IGNORE_GENERATED_FILES: true
           SHOW_ELAPSED_TIME: true
