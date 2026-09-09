@@ -37,7 +37,6 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref || github.ref_name }}
-          token: ${{ secrets.WORKFLOW_PUSH_TOKEN }}
 
       - name: Run MegaLinter
         uses: oxsecurity/megalinter@15e5b45552097e318c93de385779ce3b1084052c # v10.0.0
@@ -53,6 +52,7 @@ jobs:
           commit_message: "Commit MegaLinter changes"
           commit_user_name: ${{ github.actor }}
           commit_user_email: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
+          file_pattern: '.:!.github/*'
           
   validate-workflows:
     runs-on: ubuntu-latest
