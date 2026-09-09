@@ -1,5 +1,16 @@
 on:
   workflow_call:
+    inputs:
+      args:
+        required: false
+        type: string
+        default: 'c("--no-manual", "--as-cran")'
+        description: "Arguments passed to the args parameter of rcmdcheck (must be an R expression)"
+      build_args:
+        required: false
+        type: string
+        default: 'c("--no-manual")'
+        description: "Arguments passed to the build_args parameter of rcmdcheck (must be an R expression)"
 
 name: R-CMD-check-core.yaml
 
@@ -53,4 +64,5 @@ jobs:
         uses: r-lib/actions/check-r-package@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
         with:
           upload-snapshots: true
-          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          args: ${{ inputs.args }}
+          build_args: ${{ inputs.build_args }}
