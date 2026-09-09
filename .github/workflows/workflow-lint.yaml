@@ -52,7 +52,7 @@ jobs:
           commit_message: "Commit MegaLinter changes"
           commit_user_name: ${{ github.actor }}
           commit_user_email: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
-          file_pattern: '.:!.github/*'
+          file_pattern: '.:!.github/workflows/*'
           
   validate-workflows:
     runs-on: ubuntu-latest
