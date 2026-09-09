@@ -6,7 +6,7 @@ on:
       PHS_ACTIONS_TOKEN:
         required: false
 
-name: phs_style_and_document.yaml
+name: phs_style.yaml
 
 permissions:
   contents: read
@@ -14,8 +14,8 @@ permissions:
   packages: read
 
 jobs:
-  phs_style_and_document:
-    name: "Automatically style and document the code"
+  phs_style:
+    name: "Automatically style the code"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/public-health-scotland/phs-r-image
@@ -95,43 +95,6 @@ jobs:
           base: ${{ github.event.pull_request.base.ref }}
           body: |
             This Pull Request was automatically created to apply styling changes to your code.
-            Please review and merge this PR.
-          assignees: ${{ github.actor }}
-          reviewers: ${{ github.actor }}
-
-      - name: Normalise DESCRIPTION
-        run: desc::desc_normalize()
-        shell: Rscript {0}
-
-      - name: Install dependencies
-        uses: r-lib/actions/setup-r-dependencies@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2.12.1
-
-      - name: Document package
-        run: roxygen2::roxygenise()
-        shell: Rscript {0}
-
-      - name: Commit and push changes
-        id: commit_step_document
-        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
-        with:
-          commit_message: "Document package (GHA)"
-          commit_user_name: ${{ github.actor }}
-          commit_user_email: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
-        continue-on-error: true
-
-      - name: Create Pull Request
-        if: ${{ steps.commit_step_document.outputs.changes_detected == 'true' && steps.commit_step_document.outcome == 'failure' }}
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
-        with:
-          token: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
-          commit-message: "Document package (GHA)"
-          branch: auto-document-code
-          delete-branch: true
-          title: "Document package (GHA)"
-          labels: maintenance
-          base: ${{ github.event.pull_request.base.ref }}
-          body: |
-            This Pull Request was automatically created to apply documentation changes to your code.
             Please review and merge this PR.
           assignees: ${{ github.actor }}
           reviewers: ${{ github.actor }}
