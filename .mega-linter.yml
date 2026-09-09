@@ -1,11 +1,14 @@
 ENABLE_LINTERS:
   - ACTION_ACTIONLINT
   - ACTION_ZIZMOR
+  - BASH_SHELLCHECK
+  - BASH_SHFMT
   - DOCKERFILE_HADOLINT
   - JSON_JSONLINT
   - JSON_PRETTIER
   - JSON_V8R
   - MARKDOWN_MARKDOWNLINT
+  - MARKDOWN_FMLINT
   - MARKDOWN_MARKDOWN_TABLE_FORMATTER
   - PYTHON_BANDIT
   - PYTHON_BLACK
@@ -14,6 +17,11 @@ ENABLE_LINTERS:
   - PYTHON_MYPY
   - PYTHON_PYRIGHT
   - PYTHON_RUFF
+  - R_LINTR
+  - REPOSITORY_TRIVY
+  - REPOSITORY_REPOLINTER
+  - SPELL_CSPELL
+  - SPELL_LYCHEE
   - YAML_PRETTIER
   - YAML_V8R
   - YAML_YAMLLINT
@@ -29,4 +37,7 @@ IGNORE_GITIGNORED_FILES: true
 IGNORE_GENERATED_FILES: true
 
 SHOW_ELAPSED_TIME: true
-FLAVOR_SUGGESTIONS: false
+
+PLUGINS:
+  - "https://raw.githubusercontent.com/wesley-dean/mega-linter-plugin-fmlint/refs/heads/main/mega-linter-plugin-fmlint/fmlint.megalinter-descriptor.yml"
+  - "https://raw.githubusercontent.com/wesley-dean/mega-linter-plugin-repolinter/refs/heads/main/mega-linter-plugin-repolinter/repolinter.megalinter-descriptor.yml"
