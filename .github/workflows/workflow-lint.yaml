@@ -2,7 +2,6 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
-  workflows: read
 
 name: Lint and validate workflows
 
@@ -26,7 +25,6 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-      workflows: write
 
     steps:
       - name: Harden runner
@@ -38,6 +36,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          token: ${{ secrets.WORKFLOW_PUSH_TOKEN }}
 
       - name: Run MegaLinter
         uses: oxsecurity/megalinter@15e5b45552097e318c93de385779ce3b1084052c # v10.0.0
