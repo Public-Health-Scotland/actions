@@ -2,6 +2,7 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+  workflows: read
 
 name: Lint and validate workflows
 
@@ -25,6 +26,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+      workflows: write
 
     steps:
       - name: Harden runner
