@@ -41,6 +41,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
           token: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
+          persist-credentials: false
 
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2.12.1

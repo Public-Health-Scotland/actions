@@ -37,6 +37,8 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up R dependencies
         uses: r-lib/actions/setup-r-dependencies@34a9ab2b644b593b6c385fe9523f3b293e9344f5 # v2.11.3

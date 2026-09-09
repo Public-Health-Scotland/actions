@@ -43,6 +43,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
           token: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
+          persist-credentials: false
 
       - name: Enable styler cache
         run: styler::cache_activate()
