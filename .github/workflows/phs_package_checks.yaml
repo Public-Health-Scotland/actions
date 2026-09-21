@@ -105,7 +105,7 @@ jobs:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
   test-coverage:
-    needs: [R-CMD-check-core]
+    needs: [Document]
     uses: $/.github/workflows/phs_test_coverage.yaml
     permissions:
       contents: read
@@ -115,7 +115,7 @@ jobs:
       group: ${{ inputs.limit_parallel == false && format('test-coverage-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
   lint:
-    needs: [Build_README]
+    needs: [Style]
     if: ${{ inputs.lint && github.event_name == 'pull_request' }}
     uses: $/.github/workflows/phs_lint.yaml
     with:
