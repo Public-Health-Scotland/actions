@@ -60,7 +60,7 @@ jobs:
             });
   Style_and_document:
     needs: [init]
-    uses: ./.github/workflows/phs_style_and_document.yaml
+    uses: $/.github/workflows/phs_style_and_document.yaml
     permissions:
       contents: write
       pull-requests: write
@@ -71,7 +71,7 @@ jobs:
       cancel-in-progress: true
   Build_README:
     needs: [Style_and_document]
-    uses: ./.github/workflows/phs_build_readme.yaml
+    uses: $/.github/workflows/phs_build_readme.yaml
     permissions:
       contents: write
       pull-requests: write
@@ -82,7 +82,7 @@ jobs:
       cancel-in-progress: true
   R-CMD-check-core:
     needs: [Style_and_document]
-    uses: ./.github/workflows/phs_R-CMD-check-core.yaml
+    uses: $/.github/workflows/phs_R-CMD-check-core.yaml
     permissions:
       contents: read
       packages: read
@@ -93,7 +93,7 @@ jobs:
   R-CMD-check-extended:
     needs: [Style_and_document]
     if: ${{ !github.event.pull_request.draft }}
-    uses: ./.github/workflows/phs_R-CMD-check-extended.yaml
+    uses: $/.github/workflows/phs_R-CMD-check-extended.yaml
     permissions:
       contents: read
       packages: read
@@ -103,7 +103,7 @@ jobs:
       cancel-in-progress: false
   test-coverage:
     needs: [R-CMD-check-core]
-    uses: ./.github/workflows/phs_test_coverage.yaml
+    uses: $/.github/workflows/phs_test_coverage.yaml
     permissions:
       contents: read
       packages: read
@@ -114,7 +114,7 @@ jobs:
   lint:
     needs: [Build_README]
     if: ${{ inputs.lint && github.event_name == 'pull_request' }}
-    uses: ./.github/workflows/phs_lint.yaml
+    uses: $/.github/workflows/phs_lint.yaml
     with:
       changed_files_only: ${{ inputs.lint_changed_files_only }}
     permissions:
@@ -129,7 +129,7 @@ jobs:
       - R-CMD-check-extended
       - test-coverage
     if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref_name == 'main' || github.ref_name == 'master') }}
-    uses: ./.github/workflows/phs_pkgdown.yaml
+    uses: $/.github/workflows/phs_pkgdown.yaml
     permissions:
       contents: write
       packages: read
