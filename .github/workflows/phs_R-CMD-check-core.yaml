@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     # Run the job inside a Rocker image
     container:
-      image: rocker/r-ver:${{ matrix.r }}
+      image: rocker/r-ver:${{ matrix.r == 'release' && 'latest' || matrix.r }}
 
     strategy:
       fail-fast: false
