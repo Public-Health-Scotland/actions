@@ -5,17 +5,17 @@ import yaml
 def validate_workflow_references():
     """Validate that all workflow references exist and have valid syntax."""
     errors = []
-    
+
     # Get all workflow files
     workflow_files = glob.glob(".github/workflows/*.y*ml")
     workflow_names = [os.path.basename(f) for f in workflow_files]
-    
+
     # Check each workflow file
     for workflow_file in workflow_files:
         with open(workflow_file, 'r') as f:
             try:
                 workflow = yaml.safe_load(f)
-                
+
                 # Check for workflow_call references
                 if workflow.get('jobs'):
                     for job_id, job in workflow['jobs'].items():
@@ -29,7 +29,7 @@ def validate_workflow_references():
                                  )
             except yaml.YAMLError as e:
                 errors.append(f"Error parsing {workflow_file}: {e}")
-    
+
     # Report errors
     if errors:
         print("WORKFLOW VALIDATION ERRORS:")

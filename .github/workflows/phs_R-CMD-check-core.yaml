@@ -13,12 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     # Run the job inside a Rocker image
     container:
-      image: ${{ (matrix.r == 'release' && 'ghcr.io/public-health-scotland/phs-r-image') || format('rocker/r-ver:{0}', matrix.r) }}
+      image: rocker/r-ver:${{ matrix.r }}
 
     strategy:
       fail-fast: false
       matrix:
-        # Just add versions here; mapping happens above
         r:
           - release   # current CRAN release
           - '4.4.2'   # Posit Workbench baseline
@@ -35,7 +34,6 @@ jobs:
           egress-policy: audit
 
       - name: Install git and qpdf
-        if: matrix.r != 'release'
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git qpdf
@@ -45,7 +43,6 @@ jobs:
           persist-credentials: false
       - name: Set up Pandoc
         uses: r-lib/actions/setup-pandoc@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
-        if: matrix.r != 'release'
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
         with:

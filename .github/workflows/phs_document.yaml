@@ -18,7 +18,7 @@ jobs:
     name: "Automatically re-build the package documentation"
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/public-health-scotland/phs-r-image
+      image: rocker/tidyverse:latest
 
     permissions:
       contents: write

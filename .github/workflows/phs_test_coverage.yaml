@@ -14,7 +14,7 @@ jobs:
     name: "Report on test coverage"
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/public-health-scotland/phs-r-image
+      image: rocker/r-ver:latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
@@ -31,6 +31,11 @@ jobs:
 
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
+        with:
+          extra-packages: |
+            any::covr
+            any::xml2
+          needs: coverage
 
       - name: Test coverage
         run: |

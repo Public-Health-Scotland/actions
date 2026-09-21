@@ -18,7 +18,7 @@ jobs:
     name: "Build README"
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/public-health-scotland/phs-r-image
+      image: rocker/tidyverse:latest
 
     env:
       GITHUB_PAT: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}

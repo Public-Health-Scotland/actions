@@ -18,7 +18,7 @@ jobs:
     name: "Automatically style and document the code"
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/public-health-scotland/phs-r-image
+      image: rocker/tidyverse:latest
 
     permissions:
       contents: write

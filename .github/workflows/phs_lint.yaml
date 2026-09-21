@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: ghcr.io/public-health-scotland/phs-r-image
+      image: rocker/r-ver:latest
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
