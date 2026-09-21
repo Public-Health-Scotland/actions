@@ -13,7 +13,7 @@ jobs:
     name: "Build and deploy the pkgdown site"
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/public-health-scotland/phs-r-image
+      image: rocker/tidyverse:latest
 
     # Only restrict concurrency for non-PR jobs
     concurrency:
