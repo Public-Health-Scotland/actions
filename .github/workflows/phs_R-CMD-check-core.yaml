@@ -19,9 +19,9 @@ jobs:
       fail-fast: false
       matrix:
         r:
-          - release   # current CRAN release
-          - '4.4.2'   # Posit Workbench baseline
-          - '4.5.1'   # Posit Workbench baseline
+          - release # current CRAN release
+          - "4.4.2" # Posit Workbench baseline
+          - "4.5.1" # Posit Workbench baseline
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}

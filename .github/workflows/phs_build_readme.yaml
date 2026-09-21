@@ -81,7 +81,6 @@ jobs:
         env:
           GITHUB_EVENT_PULL_REQUEST_BASE_REF: ${{ github.event.pull_request.base.ref }}
 
-
       - name: Install dependencies
         if: ${{ steps.readme-check.outputs.build == 'true' }}
         uses: r-lib/actions/setup-r-dependencies@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
