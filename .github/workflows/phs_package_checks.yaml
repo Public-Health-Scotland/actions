@@ -81,7 +81,7 @@ jobs:
       group: ${{ github.workflow }}-document-${{ github.ref }}
       cancel-in-progress: true
   Build_README:
-    needs: [Document]
+    needs: [Style]
     uses: $/.github/workflows/phs_build_readme.yaml
     permissions:
       contents: write
