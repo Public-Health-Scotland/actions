@@ -48,6 +48,11 @@
     "stefanzweifel",
     "testthat",
     "tinytex",
-    "winslash"
+    "winslash",
+    "FMLINT",
+    "REPOLINTER",
+    "noninteractive",
+    "pipefall",
+    "tidyverse"
   ]
 }
