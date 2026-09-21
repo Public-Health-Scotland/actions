@@ -44,6 +44,10 @@ jobs:
 
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
+        with:
+          extra-packages: |
+            any::desc
+            any::roxygen2
 
       - name: Normalise DESCRIPTION
         run: desc::desc_normalize()

@@ -43,6 +43,12 @@ jobs:
           token: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
           persist-credentials: false
 
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
+        with:
+          extra-packages: any::styler
+          needs: check
+
       - name: Enable styler cache
         run: styler::cache_activate()
         shell: Rscript {0}
