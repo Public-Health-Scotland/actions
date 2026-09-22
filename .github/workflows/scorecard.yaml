@@ -8,13 +8,13 @@ on:
     # Weekly on Saturdays.
     - cron: "30 1 * * 6"
 
-permissions: read-all
-
 jobs:
   analysis:
     name: Scorecard analysis
     runs-on: ubuntu-latest
     permissions:
+      # Needed to check out the repository.
+      contents: read
       # Needed for Code scanning upload
       security-events: write
       # Needed for GitHub OIDC token if publish_results is true

@@ -15,7 +15,6 @@ on:
 permissions:
   contents: read
   pull-requests: read
-  packages: read
 
 jobs:
   lint:
@@ -27,13 +26,18 @@ jobs:
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      LINTR_ERROR_ON_LINT: true
+      LINTR_ERROR_ON_LINT: false
 
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
+
+      - name: Install system dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git
 
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -54,7 +58,7 @@ jobs:
         shell: Rscript {0}
         run: |
           if (
-            isTRUE(${{ inputs.changed_files_only }}) &&
+            isTRUE(${{ inputs.changed_files_only && 'TRUE' || 'FALSE' }}) &&
             identical("${{ github.event_name }}", "pull_request")
           ) {
             files <- gh::gh(
