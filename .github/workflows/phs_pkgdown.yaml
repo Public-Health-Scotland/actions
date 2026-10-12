@@ -7,7 +7,6 @@ name: pkgdown.yaml
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   pkgdown:
