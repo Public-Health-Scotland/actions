@@ -2,19 +2,21 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
 
 name: phs_test_coverage.yaml
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   test-coverage:
     name: "Report on test coverage"
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/public-health-scotland/phs-r-image
+      image: rocker/r-ver:latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
@@ -24,13 +26,23 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Install system dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git curl gpg
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: r-lib/actions/setup-r-dependencies@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
+        uses: r-lib/actions/setup-r-dependencies@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          extra-packages: |
+            any::covr
+            any::xml2
+          needs: coverage
 
       - name: Test coverage
         run: |
@@ -43,7 +55,7 @@ jobs:
         shell: Rscript {0}
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           # Fail if error if not on PR, or if on PR and token is given
           fail_ci_if_error: ${{ github.event_name != 'pull_request' || secrets.CODECOV_TOKEN }}
