@@ -21,14 +21,10 @@ on:
     secrets:
       PHS_ACTIONS_TOKEN:
         required: false
+      CODECOV_TOKEN:
+        required: false
 
 name: phs_package_checks.yaml
-
-permissions:
-  contents: read
-  pull-requests: read
-  statuses: read
-  packages: read
 
 concurrency:
   group: ${{ format('phs-package-checks-{0}-{1}', github.repository, github.event.pull_request.number || github.ref) }}
@@ -60,24 +56,25 @@ jobs:
             });
   Style:
     needs: [init]
-    uses: ./.github/workflows/phs_style.yaml
+    uses: $/.github/workflows/phs_style.yaml
     permissions:
       contents: write
       pull-requests: write
-    secrets: inherit
+    secrets:
+      PHS_ACTIONS_TOKEN: ${{ secrets.PHS_ACTIONS_TOKEN }}
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: ${{ github.workflow }}-style-${{ github.ref }}
       cancel-in-progress: true
   Document:
     needs: [Style]
-    uses: ./.github/workflows/phs_document.yaml
+    uses: $/.github/workflows/phs_document.yaml
     permissions:
       contents: write
       pull-requests: write
-      packages: read
-    secrets: inherit
+    secrets:
+      PHS_ACTIONS_TOKEN: ${{ secrets.PHS_ACTIONS_TOKEN }}
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: ${{ github.workflow }}-document-${{ github.ref }}
       cancel-in-progress: true
   Document:
     needs: [Style]
@@ -90,49 +87,45 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
   Build_README:
-    needs: [Style]
+    needs: [Document]
     uses: $/.github/workflows/phs_build_readme.yaml
     permissions:
       contents: write
       pull-requests: write
-      packages: read
-    secrets: inherit
+    secrets:
+      PHS_ACTIONS_TOKEN: ${{ secrets.PHS_ACTIONS_TOKEN }}
     concurrency:
       group: ${{ github.workflow }}-build-readme-${{ github.ref }}
       cancel-in-progress: true
   R-CMD-check-core:
-    needs: [Style, Document]
+    needs: [Document]
     uses: $/.github/workflows/phs_R-CMD-check-core.yaml
     permissions:
       contents: read
-      packages: read
-    secrets: inherit
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'phs-core-check-queue' }}
       cancel-in-progress: false
   R-CMD-check-extended:
-    needs: [Style, Document]
+    needs: [Document]
     if: ${{ !github.event.pull_request.draft }}
     uses: $/.github/workflows/phs_R-CMD-check-extended.yaml
     permissions:
       contents: read
-      packages: read
-    secrets: inherit
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
   test-coverage:
-    needs: [R-CMD-check-core]
+    needs: [Document]
     uses: $/.github/workflows/phs_test_coverage.yaml
     permissions:
       contents: read
-      packages: read
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('test-coverage-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
   lint:
-    needs: [Build_README]
+    needs: [Style]
     if: ${{ inputs.lint && github.event_name == 'pull_request' }}
     uses: $/.github/workflows/phs_lint.yaml
     with:
@@ -140,7 +133,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-      packages: read
   pkgdown:
     needs:
       - Style
@@ -153,10 +145,7 @@ jobs:
     uses: $/.github/workflows/phs_pkgdown.yaml
     permissions:
       contents: write
-      packages: read
-    secrets: inherit
-
-# Final job to update status
+  # Final job to update status
   finalize:
     needs:
       - Style
@@ -182,13 +171,17 @@ jobs:
         with:
           script: |
             const allSuccess = ${{ needs.Style.result == 'success' &&
-                                    needs.Document.result == 'success' &&
-                                   needs.Build_README.result == 'success' &&
-                                    needs.R-CMD-check-core.result == 'success' &&
-                                    (needs.R-CMD-check-extended.result == 'success' || needs.R-CMD-check-extended.result == 'skipped') &&
-                                    needs.test-coverage.result == 'success' &&
-                                    (needs.pkgdown.result == 'success' || needs.pkgdown.result == 'skipped')
-                                    }};
+                       needs.Document.result == 'success' &&
+                       needs.Build_README.result == 'success' &&
+                       needs.R-CMD-check-core.result == 'success' &&
+                       (needs.R-CMD-check-extended.result == 'success' ||
+                        needs.R-CMD-check-extended.result == 'skipped') &&
+                       needs.test-coverage.result == 'success' &&
+                       (needs.lint.result == 'success' ||
+                        needs.lint.result == 'skipped') &&
+                       (needs.pkgdown.result == 'success' ||
+                        needs.pkgdown.result == 'skipped')
+                    }};
 
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,

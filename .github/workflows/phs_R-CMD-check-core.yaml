@@ -5,7 +5,6 @@ name: R-CMD-check-core.yaml
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   R-CMD-check-linux:
@@ -13,16 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     # Run the job inside a Rocker image
     container:
-      image: ${{ (matrix.r == 'release' && 'ghcr.io/public-health-scotland/phs-r-image') || format('rocker/r-ver:{0}', matrix.r) }}
+      image: rocker/r-ver:${{ matrix.r == 'release' && 'latest' || matrix.r }}
 
     strategy:
       fail-fast: false
       matrix:
-        # Just add versions here; mapping happens above
         r:
-          - release   # current CRAN release
-          - '4.4.2'   # Posit Workbench baseline
-          - '4.5.1'   # Posit Workbench baseline
+          - release # current CRAN release
+          - "4.4.2" # Posit Workbench baseline
+          - "4.5.1" # Posit Workbench baseline
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -35,7 +33,6 @@ jobs:
           egress-policy: audit
 
       - name: Install git and qpdf
-        if: matrix.r != 'release'
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git qpdf
@@ -44,15 +41,14 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Pandoc
-        uses: r-lib/actions/setup-pandoc@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
-        if: matrix.r != 'release'
+        uses: r-lib/actions/setup-pandoc@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
       - name: Install dependencies
-        uses: r-lib/actions/setup-r-dependencies@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
+        uses: r-lib/actions/setup-r-dependencies@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
         with:
           extra-packages: any::rcmdcheck
           needs: check
       - name: Run R-CMD-check
-        uses: r-lib/actions/check-r-package@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
+        uses: r-lib/actions/check-r-package@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
