@@ -76,16 +76,6 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-document-${{ github.ref }}
       cancel-in-progress: true
-  Document:
-    needs: [Style]
-    uses: ./.github/workflows/phs_document.yaml
-    permissions:
-      contents: write
-      pull-requests: write
-    secrets: inherit
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
   Build_README:
     needs: [Document]
     uses: $/.github/workflows/phs_build_readme.yaml
