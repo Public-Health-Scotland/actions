@@ -5,7 +5,6 @@ name: R-CMD-check-core.yaml
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   R-CMD-check-linux:

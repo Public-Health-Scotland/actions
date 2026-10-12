@@ -11,7 +11,6 @@ name: phs_document.yaml
 permissions:
   contents: read
   pull-requests: read
-  packages: read
 
 jobs:
   phs_document:
@@ -45,6 +44,10 @@ jobs:
 
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          extra-packages: |
+            any::desc
+            any::roxygen2
 
       - name: Normalise DESCRIPTION
         run: desc::desc_normalize()
