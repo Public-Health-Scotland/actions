@@ -14,10 +14,8 @@ permissions:
 
 jobs:
   phs_style:
-    name: "Automatically style the code"
+    name: "Automatically style the code using air"
     runs-on: ubuntu-latest
-    container:
-      image: rocker/tidyverse:latest
 
     permissions:
       contents: write
@@ -32,9 +30,6 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Mark workspace as safe for Git
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -43,17 +38,77 @@ jobs:
           token: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
           persist-credentials: false
 
-      - name: Install dependencies
-        uses: r-lib/actions/setup-r-dependencies@465b7d8e732ca3921382b1674c59bada9cbf3399 # v2.13.0
+      - name: Install posit-dev/air
+        uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237 # v1.0.0
         with:
-          extra-packages: any::styler
+          # Update this pin to 1.0.0 when Air v1 is released.
+          version: "0.12.0"
+
+      - name: Ensure air.toml exists without replacing project configuration
+        run: |
+          if [ ! -f air.toml ]; then
+            cat > air.toml <<'EOF'
+          [format]
+          line-ending = "lf"
+          EOF
+          fi
+
+      - name: Add air.toml to .Rbuildignore
+        run: |
+          touch .Rbuildignore
+          grep -qxF '^air\.toml$' .Rbuildignore || printf '%s\n' '^air\.toml$' >> .Rbuildignore
+
+      - name: Format using air
+        run: air format .
+
+      - name: Detect whether Styler should run
+        id: changed_rmd
+        shell: bash
+        run: |
+          # Pull requests only need the slower Styler pass when an R Markdown file changed.
+          # On pushes and manual/non-PR runs, style all R Markdown files to catch drift.
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "rmd_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Non-PR run: Styler will check all R Markdown files."
+            exit 0
+          fi
+
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          echo "Checking changed R Markdown files in $BASE_SHA..$HEAD_SHA"
+
+          CHANGED_RMD="$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" -- | grep -Ei '\.(rmd|rmarkdown)$' || true)"
+
+          if [ -n "$CHANGED_RMD" ]; then
+            echo "rmd_changed=true" >> "$GITHUB_OUTPUT"
+            printf '%s\n' "$CHANGED_RMD"
+          else
+            echo "rmd_changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changed R Markdown files detected; skipping Styler."
+          fi
+
+      - name: Setup R
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        uses: r-lib/actions/setup-r@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          use-public-rspm: true
+
+      - name: Install Styler dependencies
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        uses: r-lib/actions/setup-r-dependencies@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
+        with:
+          extra-packages: |
+            any::styler
+            any::knitr
           needs: check
 
-      - name: Enable styler cache
+      - name: Enable Styler cache
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
         run: styler::cache_activate()
         shell: Rscript {0}
 
-      - name: Determine cache location
+      - name: Determine Styler cache location
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
         id: styler-location
         run: |
           cat(
@@ -66,18 +121,18 @@ jobs:
           )
         shell: Rscript {0}
 
-      - name: Cache styler
+      - name: Cache Styler results
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.styler-location.outputs.location }}
-          key: ${{ runner.os }}-styler-${{ github.sha }}
+          key: ${{ runner.os }}-styler-${{ hashFiles('**/*.Rmd', '**/*.rmd', '**/*.Rmarkdown', '**/*.rmarkdown') }}
           restore-keys: |
             ${{ runner.os }}-styler-
-            ${{ runner.os }}-
 
-      - name: Style code
-        run: styler::style_pkg()
-        shell: Rscript {0}
+      - name: Style R Markdown using Styler
+        if: steps.changed_rmd.outputs.rmd_changed == 'true'
+        run: Rscript -e 'styler::style_dir(".", filetype = c("rmd", "rmarkdown"))'
 
       - name: Commit and push changes
         id: commit_step_style
@@ -92,6 +147,7 @@ jobs:
         if: ${{ steps.commit_step_style.outputs.changes_detected == 'true' && steps.commit_step_style.outcome == 'failure' }}
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
+          token: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
           commit-message: "Style code (GHA)"
           branch: auto-style-code
           delete-branch: true
