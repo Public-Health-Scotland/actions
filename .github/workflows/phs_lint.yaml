@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: rocker/r-ver:latest
+      image: rocker/tidyverse:latest
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -55,7 +55,6 @@ jobs:
           extra-packages: |
             any::gh
             any::lintr
-            any::purrr
             any::cyclocomp
             local::.
           needs: check
