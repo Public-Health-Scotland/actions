@@ -11,6 +11,11 @@ on:
         required: false
         type: boolean
         default: true
+      error_on_lint:
+        description: "Fail the job when lint issues are found"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -26,7 +31,7 @@ jobs:
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      LINTR_ERROR_ON_LINT: false
+      LINTR_ERROR_ON_LINT: ${{ inputs.error_on_lint && 'true' || 'false' }}
 
     steps:
       - name: Harden runner
