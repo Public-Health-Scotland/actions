@@ -18,6 +18,12 @@ on:
         type: boolean
         default: true
         description: "By default, only files changed in the PR will be linted; if you want to lint all files, set this to false"
+      lint_error_on_lint:
+        required: false
+        type: boolean
+        default: false
+        description: "Fail the lint job when lint issues are found"
+
     secrets:
       PHS_ACTIONS_TOKEN:
         required: false
@@ -38,7 +44,7 @@ jobs:
       statuses: write
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@351661ca32ac09a36dc5ee2d536e3128f2a3c8ed # v2.22.0
         with:
           egress-policy: audit
 
@@ -65,6 +71,7 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-style-${{ github.ref }}
       cancel-in-progress: true
+      
   Document:
     needs: [Style]
     uses: $/.github/workflows/phs_document.yaml
@@ -76,6 +83,7 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-document-${{ github.ref }}
       cancel-in-progress: true
+      
   Build_README:
     needs: [Document]
     uses: $/.github/workflows/phs_build_readme.yaml
@@ -87,6 +95,7 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-build-readme-${{ github.ref }}
       cancel-in-progress: true
+      
   R-CMD-check-core:
     needs: [Document]
     uses: $/.github/workflows/phs_R-CMD-check-core.yaml
@@ -95,6 +104,7 @@ jobs:
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'phs-core-check-queue' }}
       cancel-in-progress: false
+      
   R-CMD-check-extended:
     needs: [Document]
     if: ${{ !github.event.pull_request.draft }}
@@ -104,6 +114,7 @@ jobs:
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('r-cmd-check-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
+      
   test-coverage:
     needs: [Document]
     uses: $/.github/workflows/phs_test_coverage.yaml
@@ -114,15 +125,18 @@ jobs:
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('test-coverage-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
+      
   lint:
     needs: [Style]
     if: ${{ inputs.lint && github.event_name == 'pull_request' }}
     uses: $/.github/workflows/phs_lint.yaml
     with:
       changed_files_only: ${{ inputs.lint_changed_files_only }}
+      error_on_lint: ${{ inputs.lint_error_on_lint }}
     permissions:
       contents: read
       pull-requests: read
+      
   pkgdown:
     needs:
       - Style
@@ -135,6 +149,7 @@ jobs:
     uses: $/.github/workflows/phs_pkgdown.yaml
     permissions:
       contents: write
+      
   # Final job to update status
   finalize:
     needs:
@@ -152,7 +167,7 @@ jobs:
       statuses: write
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@351661ca32ac09a36dc5ee2d536e3128f2a3c8ed # v2.22.0
         with:
           egress-policy: audit
 
