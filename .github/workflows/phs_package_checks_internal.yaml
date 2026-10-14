@@ -96,7 +96,10 @@ jobs:
     permissions:
       contents: read
     with:
-      args: ${{ inputs.run_tests && 'c("--no-manual", "--as-cran")' || 'c("--no-manual", "--ignore-vignettes", "--no-tests")' }}
+      args: ${{ inputs.run_tests &&
+        'c("--no-manual", "--as-cran", "--no-examples")' ||
+        'c("--no-manual", "--ignore-vignettes", "--no-tests", "--no-examples")'
+        }}      
       build_args: 'c("--no-manual", "--no-build-vignettes")'    
     secrets: inherit
     concurrency:
