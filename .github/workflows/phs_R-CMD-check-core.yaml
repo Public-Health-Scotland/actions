@@ -1,5 +1,21 @@
 on:
   workflow_call:
+    inputs:
+      args:
+        required: false
+        type: string
+        default: 'c("--no-manual", "--as-cran")'
+        description: "Arguments passed to the args parameter of rcmdcheck (must be an R expression)"
+      build_args:
+        required: false
+        type: string
+        default: 'c("--no-manual")'
+        description: "Arguments passed to the build_args parameter of rcmdcheck (must be an R expression)"
+      error-on:
+        required: false
+        type: string
+        default: '"warning"'
+        description: "Check failure threshold passed to rcmdcheck (quoted R string)"
 
 name: R-CMD-check-core.yaml
 
@@ -51,4 +67,6 @@ jobs:
         uses: r-lib/actions/check-r-package@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2.14.0
         with:
           upload-snapshots: true
-          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          args: ${{ inputs.args }}
+          build_args: ${{ inputs.build_args }}
+          error-on: ${{ inputs.error-on }}
