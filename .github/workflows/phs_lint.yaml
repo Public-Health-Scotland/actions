@@ -51,6 +51,7 @@ jobs:
             any::gh
             any::lintr
             any::purrr
+            any::cyclocomp
             local::.
           needs: check
 
