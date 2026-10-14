@@ -13,38 +13,88 @@ on:
         required: false
         type: boolean
         default: false
+      lint:
+        required: false
+        type: boolean
+        default: false
+        description: "Lint the package using lintr"
+      lint_changed_files_only:
+        required: false
+        type: boolean
+        default: true
+        description: "By default, only files changed in the PR will be linted; if you want to lint all files, set this to false"
     secrets:
       PHS_ACTIONS_TOKEN:
         required: false
-
-permissions:
-  contents: read
-  pull-requests: read
-  statuses: read
-  packages: read
+      CODECOV_TOKEN:
+        required: false
 
 concurrency:
   group: ${{ format('phs-package-checks-{0}-{1}', github.repository, github.event.pull_request.number || github.ref) }}
   cancel-in-progress: true
 
 jobs:
-  Style_and_document:
-    uses: ./.github/workflows/phs_style_and_document.yaml
+  init:
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Create initial status check
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'pending',
+              description: 'Package checks in progress',
+              context: 'PHS Package Checks'
+            });
+  Style:
+    needs: [init]
+    uses: $/.github/workflows/phs_style.yaml
     permissions:
       contents: write
       pull-requests: write
-      packages: read
-    secrets: inherit
+    secrets:
+      PHS_ACTIONS_TOKEN: ${{ secrets.PHS_ACTIONS_TOKEN }}
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: ${{ github.workflow }}-style-${{ github.ref }}
       cancel-in-progress: true
       
-  R-CMD-check-core:
-    needs: [Style_and_document]
-    uses: ./.github/workflows/phs_R-CMD-check-core.yaml
+  Document:
+    needs: [Style]
+    uses: $/.github/workflows/phs_document.yaml
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets:
+      PHS_ACTIONS_TOKEN: ${{ secrets.PHS_ACTIONS_TOKEN }}
+    concurrency:
+      group: ${{ github.workflow }}-document-${{ github.ref }}
+      cancel-in-progress: true
+      
+  lint:
+    needs: [Style]
+    if: ${{ inputs.lint && github.event_name == 'pull_request' }}
+    uses: $/.github/workflows/phs_lint.yaml
+    with:
+      changed_files_only: ${{ inputs.lint_changed_files_only }}
     permissions:
       contents: read
-      packages: read
+      pull-requests: read
+      
+  R-CMD-check-core:
+    needs: [Document]
+    uses: $/.github/workflows/phs_R-CMD-check-core.yaml
+    permissions:
+      contents: read
     with:
       args: ${{ inputs.run_tests && 'c("--no-manual", "--as-cran")' || 'c("--no-manual", "--ignore-vignettes", "--no-tests")' }}
       build_args: 'c("--no-manual", "--no-build-vignettes")'    
@@ -56,22 +106,69 @@ jobs:
   test-coverage:
     needs: [R-CMD-check-core]
     if: ${{ inputs.run_tests }}
-    uses: ./.github/workflows/phs_test_coverage.yaml
+    uses: $/.github/workflows/phs_test_coverage.yaml
     permissions:
       contents: read
-      packages: read
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     concurrency:
       group: ${{ inputs.limit_parallel == false && format('test-coverage-{0}-{1}', github.workflow, github.run_id) || 'package-checks-queue' }}
       cancel-in-progress: false
 
   pkgdown:
     needs:
-      - Style_and_document
       - R-CMD-check-core
-    if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref_name == 'main' || github.ref_name == 'master') }}
-    uses: ./.github/workflows/phs_pkgdown.yaml
+      - test-coverage
+    if: |
+      always() &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      (github.ref_name == 'main' || github.ref_name == 'master') &&
+      needs.R-CMD-check-core.result == 'success' &&
+      (needs.test-coverage.result == 'success' ||
+       needs.test-coverage.result == 'skipped')
+    uses: $/.github/workflows/phs_pkgdown.yaml
     permissions:
       contents: write
-      packages: read
-    secrets: inherit
+      
+  # Final job to update status
+  finalize:
+    needs:
+      - Style
+      - Document
+      - R-CMD-check-core
+      - test-coverage
+      - lint
+      - pkgdown
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      statuses: write
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Update final status
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const allSuccess = ${{ needs.Style.result == 'success' &&
+                       needs.Document.result == 'success' &&
+                       needs.R-CMD-check-core.result == 'success' &&
+                       (needs.test-coverage.result == 'success' ||
+                        needs.test-coverage.result == 'skipped') &&
+                       (needs.lint.result == 'success' ||
+                        needs.lint.result == 'skipped') &&
+                       (needs.pkgdown.result == 'success' ||
+                        needs.pkgdown.result == 'skipped')
+                    }};
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: allSuccess ? 'success' : 'failure',
+              description: allSuccess ? 'All checks passed' : 'Some checks failed',
+              context: 'PHS Package Checks'
+            });
