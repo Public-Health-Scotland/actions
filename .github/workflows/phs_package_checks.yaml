@@ -139,6 +139,7 @@ jobs:
       
   pkgdown:
     needs:
+      - Style
       - Document
       - Build_README
       - R-CMD-check-core
