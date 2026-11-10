@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Harden runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -37,7 +37,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
           token: ${{ secrets.PHS_ACTIONS_TOKEN || github.token }}
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Determine whether README needs rebuilding
         id: readme-check
@@ -96,7 +96,7 @@ jobs:
       - name: Commit and push changes
         if: ${{ steps.readme-check.outputs.build == 'true' }}
         id: commit_step_readme
-        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
+        uses: stefanzweifel/git-auto-commit-action@d0b01107b5db882071f96de5dd4b54961ea93f4c # v7.2.1
         with:
           commit_message: "Build README (GHA)"
           commit_user_name: ${{ github.actor }}
